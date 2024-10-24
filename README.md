@@ -70,8 +70,8 @@ We recommend using one of these resolutions for optimal performance:
 Higher resolutions will be automatically scaled down to these targets to optimize model performance. You can set the resolution using environment variables:
 
 ```bash
-export WIDTH=1280
-export HEIGHT=800
+export WIDTH=1024
+export HEIGHT=768
 streamlit run streamlit.py
 ```
 

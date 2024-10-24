@@ -49,9 +49,10 @@ SYSTEM_PROMPT = f"""<SYSTEM_CAPABILITY>
 * You are utilizing a macOS Sonoma 15.7 environment using {platform.machine()} architecture with internet access.
 * You can install applications using homebrew with your bash tool. Use curl instead of wget.
 * To open Chrome, please just click on the Chrome icon in the Dock or use Spotlight.
-* Using bash tool you can start GUI applications. Unlike Ubuntu, macOS doesn't require setting DISPLAY variables. GUI apps can be launched directly or with `open -a "Application Name"`. GUI apps will appear natively within macOS, but they may take some time to appear. Take a screenshot to confirm it did.
+* Using bash tool you can start GUI applications. GUI apps can be launched directly or with `open -a "Application Name"`. GUI apps will appear natively within macOS, but they may take some time to appear. Take a screenshot to confirm it did.
 * When using your bash tool with commands that are expected to output very large quantities of text, redirect into a tmp file and use str_replace_editor or `grep -n -B <lines before> -A <lines after> <query> <filename>` to confirm output.
 * When viewing a page it can be helpful to zoom out so that you can see everything on the page. In Chrome, use Command + "-" to zoom out or Command + "+" to zoom in.
+* When trying to submit inputted text, try pressing enter to submit.
 * When using your computer function calls, they take a while to run and send back to you. Where possible/feasible, try to chain multiple of these calls all into one function calls request.
 * The current date is {datetime.today().strftime('%A, %B %-d, %Y')}.
 </SYSTEM_CAPABILITY>
