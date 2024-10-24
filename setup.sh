@@ -16,6 +16,23 @@ else
   echo "Python 3.12 is already installed."
 fi
 
+# Install pipx if not installed
+if ! command -v pipx &>/dev/null; then
+  echo "Installing pipx..."
+  brew install pipx
+  pipx ensurepath
+else
+  echo "pipx is already installed."
+fi
+
+# Install streamlit globally using pipx
+if ! command -v streamlit &>/dev/null; then
+  echo "Installing streamlit globally..."
+  pipx install streamlit
+else
+  echo "streamlit is already installed."
+fi
+
 # Install cliclick
 if ! command -v cliclick &>/dev/null; then
   echo "Installing cliclick..."
@@ -60,7 +77,13 @@ pip install -r requirements.txt
 
 echo "Setup completed successfully!"
 
-# Provide a message to start the Streamlit app
+# Remind user to restart their shell if pipx was just installed
+if [[ $PIPX_WAS_INSTALLED == 1 ]]; then
+    echo ""
+    echo "NOTE: Since pipx was just installed, you may need to restart your terminal"
+    echo "or run 'source ~/.bashrc' (or ~/.zshrc) for the streamlit command to be available."
+fi
+
 echo ""
 echo "To start the application:"
 echo "1. Set your API key:"
@@ -69,4 +92,4 @@ echo "2. Set display dimensions (recommended):"
 echo "   export WIDTH=1280"
 echo "   export HEIGHT=800"
 echo "3. Run the Streamlit app:"
-echo "   source venv/bin/activate && streamlit run app.py"
+echo "   streamlit run app.py"
