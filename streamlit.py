@@ -48,7 +48,7 @@ STREAMLIT_STYLE = """
 </style>
 """
 
-WARNING_TEXT = "⚠️ Security Alert: Never provide access to sensitive accounts or data, as malicious web content can hijack Claude's behavior"
+WARNING_TEXT = ""
 
 
 class Sender(StrEnum):
@@ -99,7 +99,7 @@ async def main():
 
     st.markdown(STREAMLIT_STYLE, unsafe_allow_html=True)
 
-    st.title("Claude Computer Use Demo")
+    st.title("Claude Computer Use for Mac")
 
     if not os.getenv("HIDE_WARNING", False):
         st.warning(WARNING_TEXT)
