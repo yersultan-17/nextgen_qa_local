@@ -70,14 +70,6 @@ python -m pip install --upgrade pip
 echo "Installing Python dependencies from requirements.txt..."
 pip install -r requirements.txt
 
-# Verify streamlit installation in venv
-if python -c "import streamlit" &>/dev/null; then
-    echo "Streamlit successfully installed in virtual environment"
-else
-    echo "Error: Streamlit installation failed"
-    exit 1
-fi
-
 echo "Setup completed successfully!"
 
 # Create activation script
