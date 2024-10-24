@@ -48,8 +48,6 @@ STREAMLIT_STYLE = """
 </style>
 """
 
-WARNING_TEXT = ""
-
 
 class Sender(StrEnum):
     USER = "user"
@@ -100,9 +98,6 @@ async def main():
     st.markdown(STREAMLIT_STYLE, unsafe_allow_html=True)
 
     st.title("Claude Computer Use for Mac")
-
-    if not os.getenv("HIDE_WARNING", False):
-        st.warning(WARNING_TEXT)
 
     with st.sidebar:
 
