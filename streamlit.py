@@ -21,12 +21,12 @@ from anthropic.types.beta import BetaMessage, BetaTextBlock, BetaToolUseBlock
 from anthropic.types.tool_use_block import ToolUseBlock
 from streamlit.delta_generator import DeltaGenerator
 
-from computer_use_demo.loop import (
+from loop import (
     PROVIDER_TO_DEFAULT_MODEL_NAME,
     APIProvider,
     sampling_loop,
 )
-from computer_use_demo.tools import ToolResult
+from tools import ToolResult
 from dotenv import load_dotenv
 
 load_dotenv()
