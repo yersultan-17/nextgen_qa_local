@@ -34,20 +34,25 @@ fi
 
 echo "All system dependencies installed."
 
-# Ensure pip is up-to-date
-python3.12 -m ensurepip --upgrade
-python3.12 -m pip install --upgrade pip
+# Create virtual environment if it doesn't exist
+if [ ! -d "venv" ]; then
+    echo "Creating new virtual environment..."
+    python3.12 -m venv venv
+else
+    echo "Virtual environment already exists."
+fi
 
-# Create a virtual environment
-echo "Creating a virtual environment with Python 3.12..."
-python3.12 -m venv venv
-
-# Activate the virtual environment
+# Activate virtual environment
+echo "Activating virtual environment..."
 source venv/bin/activate
 
 # Verify Python version
 python_version=$(python --version)
 echo "Using $python_version"
+
+# Update pip within the virtual environment
+echo "Updating pip in virtual environment..."
+python -m pip install --upgrade pip
 
 # Install Python dependencies
 echo "Installing Python dependencies from requirements.txt..."
@@ -56,6 +61,7 @@ pip install -r requirements.txt
 echo "Setup completed successfully!"
 
 # Provide a message to start the Streamlit app
+echo ""
 echo "To start the application:"
 echo "1. Set your API key:"
 echo "   export ANTHROPIC_API_KEY=your_api_key_here"
