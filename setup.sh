@@ -21,16 +21,9 @@ if ! command -v pipx &>/dev/null; then
   echo "Installing pipx..."
   brew install pipx
   pipx ensurepath
+  PIPX_WAS_INSTALLED=1
 else
   echo "pipx is already installed."
-fi
-
-# Install streamlit globally using pipx
-if ! command -v streamlit &>/dev/null; then
-  echo "Installing streamlit globally..."
-  pipx install streamlit
-else
-  echo "streamlit is already installed."
 fi
 
 # Install cliclick
@@ -51,13 +44,15 @@ fi
 
 echo "All system dependencies installed."
 
-# Create virtual environment if it doesn't exist
-if [ ! -d "venv" ]; then
-    echo "Creating new virtual environment..."
-    python3.12 -m venv venv
-else
-    echo "Virtual environment already exists."
+# Remove existing venv if it exists
+if [ -d "venv" ]; then
+    echo "Removing existing virtual environment..."
+    rm -rf venv
 fi
+
+# Create fresh virtual environment
+echo "Creating new virtual environment..."
+python3.12 -m venv venv
 
 # Activate virtual environment
 echo "Activating virtual environment..."
@@ -71,19 +66,28 @@ echo "Using $python_version"
 echo "Updating pip in virtual environment..."
 python -m pip install --upgrade pip
 
-# Install Python dependencies
+# Install Python dependencies including streamlit
 echo "Installing Python dependencies from requirements.txt..."
 pip install -r requirements.txt
 
-echo "Setup completed successfully!"
-
-# Remind user to restart their shell if pipx was just installed
-if [[ $PIPX_WAS_INSTALLED == 1 ]]; then
-    echo ""
-    echo "NOTE: Since pipx was just installed, you may need to restart your terminal"
-    echo "or run 'source ~/.bashrc' (or ~/.zshrc) for the streamlit command to be available."
+# Verify streamlit installation in venv
+if python -c "import streamlit" &>/dev/null; then
+    echo "Streamlit successfully installed in virtual environment"
+else
+    echo "Error: Streamlit installation failed"
+    exit 1
 fi
 
+echo "Setup completed successfully!"
+
+# Create activation script
+echo "Creating activation script..."
+cat > activate.sh << 'EOL'
+#!/bin/bash
+source venv/bin/activate
+export PYTHONPATH=$PYTHONPATH:$(pwd)
+
+echo "Virtual environment activated!"
 echo ""
 echo "To start the application:"
 echo "1. Set your API key:"
@@ -92,4 +96,16 @@ echo "2. Set display dimensions (recommended):"
 echo "   export WIDTH=1280"
 echo "   export HEIGHT=800"
 echo "3. Run the Streamlit app:"
-echo "   streamlit run app.py"
+echo "   streamlit run streamlit.py"
+EOL
+
+chmod +x activate.sh
+
+echo ""
+echo "Setup complete! To activate the environment and run the app:"
+echo "1. Run: source activate.sh"
+echo "2. Set your environment variables as shown above"
+echo "3. Run: streamlit run streamlit.py"
+
+# Activate the virtual environment for the current session
+source activate.sh
