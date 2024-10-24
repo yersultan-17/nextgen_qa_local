@@ -48,6 +48,8 @@ STREAMLIT_STYLE = """
 </style>
 """
 
+WARNING_TEXT = ""
+
 
 class Sender(StrEnum):
     USER = "user"
@@ -98,6 +100,8 @@ async def main():
     st.markdown(STREAMLIT_STYLE, unsafe_allow_html=True)
 
     st.title("Claude Computer Use for Mac")
+
+    st.markdown("""This is from [Mac Computer Use](https://github.com/deedy/mac_computer_use), a fork of [Anthropic Computer Use]((https://github.com/anthropics/anthropic-quickstarts/blob/main/computer-use-demo/README.md) to work natively on Mac.""")
 
     with st.sidebar:
 
