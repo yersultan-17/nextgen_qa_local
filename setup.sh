@@ -25,3 +25,24 @@ else
 fi
 
 echo "All dependencies installed."
+
+# Ensure pip is up-to-date
+python3 -m ensurepip --upgrade
+python3 -m pip install --upgrade pip
+
+# Create a virtual environment
+echo "Creating a virtual environment..."
+python3 -m venv venv
+
+# Activate the virtual environment
+source venv/bin/activate
+
+# Install Python dependencies
+echo "Installing Python dependencies from requirements.txt..."
+pip install -r requirements.txt
+
+echo "Setup completed successfully!"
+
+# Provide a message to start the Streamlit app
+echo "You can now run the Streamlit app using:"
+echo "source venv/bin/activate && streamlit run app.py"
