@@ -1,18 +1,35 @@
 # Anthropic Computer Use (for Mac)
 
-[Anthropic Computer Use](https://github.com/anthropics/anthropic-quickstarts/blob/main/computer-use-demo/README.md) is a beta Anthropic feature which runs a Docker image with Ubuntu and controls it. This forks allows you to run it on Mac OS.
+[Anthropic Computer Use](https://github.com/anthropics/anthropic-quickstarts/blob/main/computer-use-demo/README.md) is a beta Anthropic feature which runs a Docker image with Ubuntu and controls it. This fork allows you to run it natively on macOS, providing direct system control through native macOS commands and utilities.
 
 > [!CAUTION]
 > This comes with obvious risks. The Anthropic agent can control everything on your Mac. Please be careful.
-> Anthropic's new Claude 3.5 Sonnet model refuses to do unsafe things like purhcase items or download illegal content.
+> Anthropic's new Claude 3.5 Sonnet model refuses to do unsafe things like purchase items or download illegal content.
+
+## Features
+
+- Native macOS GUI interaction (no Docker required)
+- Screen capture using native macOS commands
+- Keyboard and mouse control through cliclick
+- Multiple LLM provider support (Anthropic, Bedrock, Vertex)
+- Streamlit-based interface
+- Automatic screen resolution scaling
+- File system interaction and editing capabilities
+
+## Prerequisites
+
+- macOS Sonoma 15.7 or later
+- Python 3.12+
+- Homebrew (for installing additional dependencies)
+- cliclick (`brew install cliclick`) - Required for mouse and keyboard control
 
 ## Setup Instructions
 
 1. Clone the repository and navigate to it:
 
 ```bash
-git clone https://github.com/anthropics/claude-computer-use-demo
-cd claude-computer-use-demo
+git clone https://github.com/deedy/mac_computer_use.git
+cd mac_computer_use
 ```
 
 2. Create and activate a virtual environment:

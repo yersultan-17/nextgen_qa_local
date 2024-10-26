@@ -2,6 +2,8 @@ import asyncio
 import base64
 import os
 import shlex
+import pyautogui
+import keyboard
 from enum import StrEnum
 from pathlib import Path
 from typing import Literal, TypedDict
@@ -43,6 +45,7 @@ MAX_SCALING_TARGETS: dict[str, Resolution] = {
     "WXGA": Resolution(width=1280, height=800),  # 16:10
     "FWXGA": Resolution(width=1366, height=768),  # ~16:9
 }
+SCALE_DESTINATION = MAX_SCALING_TARGETS["FWXGA"]
 
 
 class ScalingSource(StrEnum):
@@ -78,12 +81,9 @@ class ComputerTool(BaseAnthropicTool):
 
     @property
     def options(self) -> ComputerToolOptions:
-        width, height = self.scale_coordinates(
-            ScalingSource.COMPUTER, self.width, self.height
-        )
         return {
-            "display_width_px": width,
-            "display_height_px": height,
+            "display_width_px": self.width,
+            "display_height_px": self.height,
             "display_number": self.display_num,
         }
 
@@ -93,8 +93,7 @@ class ComputerTool(BaseAnthropicTool):
     def __init__(self):
         super().__init__()
 
-        self.width = int(os.getenv("WIDTH") or 0)
-        self.height = int(os.getenv("HEIGHT") or 0)
+        self.width, self.height = pyautogui.size()
         assert self.width and self.height, "WIDTH, HEIGHT must be set"
         self.display_num = None  # macOS doesn't use X11 display numbers
 
@@ -106,6 +105,7 @@ class ComputerTool(BaseAnthropicTool):
         coordinate: tuple[int, int] | None = None,
         **kwargs,
     ):
+        print("Action: ", action, text, coordinate)
         if action in ("mouse_move", "left_click_drag"):
             if coordinate is None:
                 raise ToolError(f"coordinate is required for {action}")
@@ -116,9 +116,7 @@ class ComputerTool(BaseAnthropicTool):
             if not all(isinstance(i, int) and i >= 0 for i in coordinate):
                 raise ToolError(f"{coordinate} must be a tuple of non-negative ints")
 
-            x, y = self.scale_coordinates(
-                ScalingSource.API, coordinate[0], coordinate[1]
-            )
+            x, y = self.scale_coordinates(ScalingSource.API, coordinate[0], coordinate[1])
 
             if action == "mouse_move":
                 return await self.shell(f"cliclick m:{x},{y}")
@@ -134,9 +132,9 @@ class ComputerTool(BaseAnthropicTool):
                 raise ToolError(output=f"{text} must be a string")
 
             if action == "key":
-                # Convert common key names to cliclick format
+                # Convert common key names to pyautogui format
                 key_map = {
-                    "Return": "return",
+                    "Return": "enter",
                     "space": "space",
                     "Tab": "tab",
                     "Left": "left",
@@ -144,9 +142,32 @@ class ComputerTool(BaseAnthropicTool):
                     "Up": "up",
                     "Down": "down",
                     "Escape": "esc",
+                    "command": "command",
+                    "cmd": "command",
+                    "alt": "alt",
+                    "shift": "shift",
+                    "ctrl": "ctrl"
                 }
-                mapped_text = key_map.get(text, text)
-                return await self.shell(f"cliclick kp:{mapped_text}")
+
+                try:
+                    if "+" in text:
+                        # Handle combinations like "ctrl+c"
+                        keys = text.split("+")
+                        mapped_keys = [key_map.get(k.strip(), k.strip()) for k in keys]
+                        await asyncio.get_event_loop().run_in_executor(
+                            None, keyboard.press_and_release, '+'.join(mapped_keys)
+                        )
+                    else:
+                        # Handle single keys
+                        mapped_key = key_map.get(text, text)
+                        await asyncio.get_event_loop().run_in_executor(
+                            None, keyboard.press_and_release, mapped_key
+                        )
+
+                    return ToolResult(output=f"Pressed key: {text}", error=None, base64_image=None)
+
+                except Exception as e:
+                    return ToolResult(output=None, error=str(e), base64_image=None)
             elif action == "type":
                 results: list[ToolResult] = []
                 for chunk in chunks(text, TYPING_GROUP_SIZE):
@@ -179,6 +200,7 @@ class ComputerTool(BaseAnthropicTool):
                     "cliclick p",
                     take_screenshot=False,
                 )
+                import pdb; pdb.set_trace()
                 if result.output:
                     x, y = map(int, result.output.strip().split(","))
                     x, y = self.scale_coordinates(ScalingSource.COMPUTER, x, y)
@@ -204,11 +226,9 @@ class ComputerTool(BaseAnthropicTool):
         # Use macOS native screencapture
         screenshot_cmd = f"screencapture -x {path}"
         result = await self.shell(screenshot_cmd, take_screenshot=False)
-        
+
         if self._scaling_enabled:
-            x, y = self.scale_coordinates(
-                ScalingSource.COMPUTER, self.width, self.height
-            )
+            x, y = SCALE_DESTINATION['width'], SCALE_DESTINATION['height']
             await self.shell(
                 f"sips -z {y} {x} {path}",  # sips is macOS native image processor
                 take_screenshot=False
@@ -220,7 +240,7 @@ class ComputerTool(BaseAnthropicTool):
             )
         raise ToolError(f"Failed to take screenshot: {result.error}")
 
-    async def shell(self, command: str, take_screenshot=True) -> ToolResult:
+    async def shell(self, command: str, take_screenshot=False) -> ToolResult:
         """Run a shell command and return the output, error, and optionally a screenshot."""
         _, stdout, stderr = await run(command)
         base64_image = None
@@ -232,27 +252,30 @@ class ComputerTool(BaseAnthropicTool):
 
         return ToolResult(output=stdout, error=stderr, base64_image=base64_image)
 
-    def scale_coordinates(self, source: ScalingSource, x: int, y: int):
-        """Scale coordinates to a target maximum resolution."""
+    def scale_coordinates(self, source: ScalingSource, x: int, y: int) -> tuple[int, int]:
+        """
+        Scale coordinates between original resolution and target resolution (SCALE_DESTINATION).
+
+        Args:
+            source: ScalingSource.API for scaling up from SCALE_DESTINATION to original resolution
+                   or ScalingSource.COMPUTER for scaling down from original to SCALE_DESTINATION
+            x, y: Coordinates to scale
+
+        Returns:
+            Tuple of scaled (x, y) coordinates
+        """
         if not self._scaling_enabled:
             return x, y
-        ratio = self.width / self.height
-        target_dimension = None
-        for dimension in MAX_SCALING_TARGETS.values():
-            # allow some error in the aspect ratio - not ratios are exactly 16:9
-            if abs(dimension["width"] / dimension["height"] - ratio) < 0.02:
-                if dimension["width"] < self.width:
-                    target_dimension = dimension
-                break
-        if target_dimension is None:
-            return x, y
-        # should be less than 1
-        x_scaling_factor = target_dimension["width"] / self.width
-        y_scaling_factor = target_dimension["height"] / self.height
+
+        # Calculate scaling factors
+        x_scaling_factor = SCALE_DESTINATION['width'] / self.width
+        y_scaling_factor = SCALE_DESTINATION['height'] / self.height
+
         if source == ScalingSource.API:
-            if x > self.width or y > self.height:
-                raise ToolError(f"Coordinates {x}, {y} are out of bounds")
-            # scale up
+            # Scale up from SCALE_DESTINATION to original resolution
+            if x > SCALE_DESTINATION['width'] or y > SCALE_DESTINATION['height']:
+                raise ToolError(f"Coordinates {x}, {y} are out of bounds for {SCALE_DESTINATION['width']}x{SCALE_DESTINATION['height']}")
             return round(x / x_scaling_factor), round(y / y_scaling_factor)
-        # scale down
-        return round(x * x_scaling_factor), round(y * y_scaling_factor)
+        else:
+            # Scale down from original resolution to SCALE_DESTINATION
+            return round(x * x_scaling_factor), round(y * y_scaling_factor)
