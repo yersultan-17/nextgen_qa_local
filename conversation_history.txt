@@ -1,4 +1,0 @@
-Conversation History - October 24, 2024
-
-User: Add conversation history to ~/dev/mac_computer_use.
-Assistant: Created directory ~/dev/mac_computer_use and initialized conversation history file.
