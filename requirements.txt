@@ -7,3 +7,7 @@ google-auth<3,>=2
 python-dotenv>=1.0.1
 pyautogui>=0.9.54
 watchdog>=5.0.3
+google-api-python-client
+google-auth-httplib2
+google-auth-oauthlib
+atlassian-python-api
