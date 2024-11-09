@@ -8,20 +8,24 @@ import json
 import dotenv
 from datetime import datetime
 from jira import create_issue
+from firecrawl import FirecrawlApp
+
 
 dotenv.load_dotenv("../.env")
 
 GOOGLE_CREDS_FILE = "tools/empatika-labs-sales-20e446c8764d.json"
 
 class TestPlanSpreadsheetGenerator:
-    def __init__(self, google_creds_file: str, anthropic_api_key: str):
+    def __init__(self, google_creds_file: str, anthropic_api_key: str, firecrawl_api_key: str):
         """
         Initialize the generator with API credentials.
         
         Args:
             google_creds_file (str): Path to Google service account JSON file
             anthropic_api_key (str): Anthropic API key
+            firecrawl_api_key (str): Firecrawl API key
         """
+        # Initialize existing services
         self.client = anthropic.Anthropic(api_key=anthropic_api_key)
         self.creds = service_account.Credentials.from_service_account_file(
             google_creds_file,
@@ -32,7 +36,157 @@ class TestPlanSpreadsheetGenerator:
         )
         self.sheets_service = build('sheets', 'v4', credentials=self.creds)
         self.drive_service = build('drive', 'v3', credentials=self.creds)
-        self.sheet_ids = {}  # Store sheet IDs for reference
+        self.sheet_ids = {}
+        
+        # Initialize Firecrawl
+        self.firecrawl = FirecrawlApp(api_key=firecrawl_api_key)
+
+
+
+
+class TestPlanSpreadsheetGenerator:
+    def __init__(self, google_creds_file: str, anthropic_api_key: str, firecrawl_api_key: str):
+        """
+        Initialize the generator with API credentials.
+        
+        Args:
+            google_creds_file (str): Path to Google service account JSON file
+            anthropic_api_key (str): Anthropic API key
+            firecrawl_api_key (str): Firecrawl API key
+        """
+        # Initialize existing services
+        self.client = anthropic.Anthropic(api_key=anthropic_api_key)
+        self.creds = service_account.Credentials.from_service_account_file(
+            google_creds_file,
+            scopes=[
+                'https://www.googleapis.com/auth/spreadsheets',
+                'https://www.googleapis.com/auth/drive'
+            ]
+        )
+        self.sheets_service = build('sheets', 'v4', credentials=self.creds)
+        self.drive_service = build('drive', 'v3', credentials=self.creds)
+        self.sheet_ids = {}
+        
+        # Initialize Firecrawl
+        self.firecrawl = FirecrawlApp(api_key=firecrawl_api_key)
+
+    def analyze_website_and_generate_test_plan(self, website_url: str) -> Tuple[dict, str]:
+        """
+        Analyze website using Firecrawl and generate test plan.
+        
+        Args:
+            website_url (str): URL of the website to analyze
+            
+        Returns:
+            Tuple[dict, str]: Test plan data and spreadsheet ID
+        """
+        try:
+            print(f"Analyzing website: {website_url}")
+            
+            # Scrape website using Firecrawl
+            response = self.firecrawl.scrape_url(
+                url=website_url,
+                params={
+                    'formats': ['markdown'],  # Get markdown format
+                }
+            )
+            
+            # Extract website content from Firecrawl response
+            website_content = response.get('markdown', '')
+            
+            # Generate website analysis using Claude
+            analysis_prompt = f"""
+            Analyze the following website content and create a structured analysis for test plan generation.
+            
+            Website URL: {website_url}
+            
+            Content:
+            {website_content}
+            
+            Please analyze this content and provide a structured response in JSON format that includes:
+            1. Website purpose and main features
+            2. User interactions and workflows
+            3. Input/output requirements
+            4. Integration points
+            5. Key functionality areas
+            6. Potential test scenarios
+            
+            Format the response as:
+            {{
+                "description": "Detailed website description",
+                "features": [
+                    "Feature 1",
+                    "Feature 2",
+                    ...
+                ],
+                "workflows": [
+                    "Workflow 1",
+                    "Workflow 2",
+                    ...
+                ],
+                "inputs": {{
+                    "type": "example value",
+                    ...
+                }},
+                "test_scenarios": [
+                    {{
+                        "name": "Scenario name",
+                        "description": "What to test",
+                        "requirements": ["Requirement 1", "Requirement 2"]
+                    }},
+                    ...
+                ]
+            }}
+            """
+            
+            # Get analysis from Claude
+            analysis_message = self.client.messages.create(
+                model="claude-3-5-sonnet-20241022",
+                max_tokens=4096,
+                messages=[{
+                    "role": "user",
+                    "content": analysis_prompt
+                }]
+            )
+            
+            # Parse the analysis response
+            analysis_data = json.loads(analysis_message.content[0].text)
+            
+            # Format description for test plan
+            website_description = f"""
+            Website: {website_url}
+            
+            Purpose and Description:
+            {analysis_data['description']}
+            
+            Key Features:
+            {chr(10).join('- ' + feature for feature in analysis_data['features'])}
+            
+            Main Workflows:
+            {chr(10).join('- ' + workflow for workflow in analysis_data['workflows'])}
+            
+            Test Scenarios:
+            {chr(10).join(f"- {scenario['name']}: {scenario['description']}" for scenario in analysis_data['test_scenarios'])}
+            """
+            
+            # Create test data structure
+            test_data = {
+                'inputs': analysis_data['inputs'],
+                'scenarios': analysis_data['test_scenarios']
+            }
+            
+            # Generate test plan using the analyzed information
+            test_plan_data, spreadsheet_id = self.generate_all(
+                website_url=website_url,
+                website_description=website_description,
+                test_data=test_data
+            )
+            
+            return test_plan_data, spreadsheet_id
+            
+        except Exception as e:
+            raise Exception(f"Error analyzing website and generating test plan: {str(e)}")
+
 
     def verify_spreadsheet_access(self, spreadsheet_id: str) -> bool:
         """
@@ -228,6 +382,9 @@ class TestPlanSpreadsheetGenerator:
         6. Test cases should be specific to the website's purpose and features
         7. Include security and performance considerations
         8. Consider user experience and accessibility
+        9. If you need personal data for testing, use the following person info:
+        - Name: Bayram Annakov
+        - LinkedIn: https://www.linkedin.com/in/bayramannakov
         """
         
         try:
@@ -675,45 +832,39 @@ def get_plan_data():
 if __name__ == "__main__":
     # Load environment variables
     anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
-    if not anthropic_api_key:
-        raise ValueError("Please set ANTHROPIC_API_KEY environment variable")
+    firecrawl_api_key = os.getenv("FIRECRAWL_API_KEY")
+    if not anthropic_api_key or not firecrawl_api_key:
+        raise ValueError("Please set ANTHROPIC_API_KEY and FIRECRAWL_API_KEY environment variables")
+
+    google_creds_file = "empatika-labs-sales-20e446c8764d.json"
     
-    # Initialize generator
-    generator = TestPlanSpreadsheetGenerator(GOOGLE_CREDS_FILE, anthropic_api_key)
-    
-    # Generate new test plan
-    website_description = """
-    A tool that helps sales people to prepare for meetings. Features include:
-    - LinkedIn URL input and analysis
-    - Profile data extraction
-    - Meeting preparation memo generation
-    - Company and person insights
-    """
-    
-    test_data = {
-        "linkedin_url": "https://www.linkedin.com/in/bayramannakov",
-        "expected_past_employment": "Founder Institute"
-    }
-    
-    test_plan_data, spreadsheet_id = generator.generate_all(
-        website_url="app.onsa.ai",
-        website_description=website_description,
-        test_data=test_data
+    # Initialize generator with all necessary API keys
+    generator = TestPlanSpreadsheetGenerator(
+        google_creds_file=google_creds_file,
+        anthropic_api_key=anthropic_api_key,
+        firecrawl_api_key=firecrawl_api_key
     )
+    
+    # Analyze website and generate test plan
+    website_url = "https://app.onsa.ai"
+    test_plan_data, spreadsheet_id = generator.analyze_website_and_generate_test_plan(website_url)
     
     # Get the shareable URL
     shareable_url = generator.get_spreadsheet_url(spreadsheet_id)
-    print(f"Generated spreadsheet, URL: {shareable_url}")
+    print(f"\nTest plan generated: {shareable_url}")
     
-    # Example of updating test case statuses
-    status_updates = [
-        {'id': 'TC001', 'status': 'Passed'},
-        {'id': 'TC002', 'status': 'Failed'},  # Will create Jira issue
-        {'id': 'TC003', 'status': 'In Progress'}
+    # Update test case statuses
+    updates = [
+        {"id": "TC001", "status": "Failed"},
+        {"id": "TC002", "status": "Passed"},
+        {"id": "TC003", "status": "In Progress"}
     ]
-    
+
     try:
-        result = generator.update_test_case_statuses(spreadsheet_id, status_updates)
+        result = generator.update_test_case_statuses(spreadsheet_id, updates)
         print(f"Test case statuses updated: {result}")
     except Exception as e:
         print(f"Error updating test cases: {str(e)}")
+
+
+    
