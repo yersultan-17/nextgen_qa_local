@@ -163,3 +163,5 @@ cython_debug/
 #.idea/
 
 tools/empatika-labs-sales-20e446c8764d.json
+tools/.DS_Store
+.DS_Store
