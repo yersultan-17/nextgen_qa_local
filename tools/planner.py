@@ -419,7 +419,7 @@ class TestPlanSpreadsheetGenerator:
                     # Add created issue to our list
                     created_issues.append({
                         'test_case_id': row[id_col],
-                        'jira_key': str(jira_response),  # Convert response to string for now
+                        'jira_key': jira_response['self'],  # Convert response to string for now
                         'summary': summary
                     })
                     
@@ -429,7 +429,7 @@ class TestPlanSpreadsheetGenerator:
                         spreadsheetId=spreadsheet_id,
                         range=f'Test Cases!{chr(65 + jira_col)}{row_num}',
                         valueInputOption='RAW',
-                        body={'values': [[str(jira_response)]]}  # Convert response to string
+                        body={'values': [[jira_response["self"]]]}  # Convert response to string
                     ).execute()
                     
                     print(f"Created Jira issue for test case {row[id_col]}")
