@@ -240,7 +240,7 @@ class TestPlanSpreadsheetGenerator:
         """
         return f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/view"
 
-def main():
+def generate_all(website_url:str):
     # Example usage
     anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
     if not anthropic_api_key:
@@ -252,7 +252,6 @@ def main():
     generator = TestPlanSpreadsheetGenerator(anthropic_api_key, google_creds_file)
 
     # Create and populate spreadsheet
-    website_url = "https://example.com"
     spreadsheet_id, sheet_ids = generator.create_spreadsheet(f"Test Plan - {website_url}")
     print(f"Test plan spreadsheet created: {spreadsheet_id}")
     
@@ -270,5 +269,8 @@ def main():
     shareable_url = generator.get_spreadsheet_url(spreadsheet_id)
     print(f"Test plan spreadsheet created and shared: {shareable_url}")
 
+    return test_plan_data, shareable_url
+
 if __name__ == "__main__":
-    main()
+    website_url = "https://www.example.com"
+    generate_all(website_url)
