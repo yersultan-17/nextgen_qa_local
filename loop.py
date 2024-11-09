@@ -24,6 +24,8 @@ from anthropic.types.beta import (
 
 from tools import BashTool, ComputerTool, EditTool, ToolCollection, ToolResult
 
+from tools.planner import get_plan_data
+
 BETA_FLAG = "computer-use-2024-10-22"
 
 
@@ -93,7 +95,17 @@ SYSTEM_PROMPT = f"""<SYSTEM_CAPABILITY>
 * Note: Command line function calls may have latency. Chain multiple operations into single requests where feasible.
 
 * The current date is {datetime.today().strftime('%A, %B %-d, %Y')}.
-</SYSTEM_CAPABILITY>"""
+</SYSTEM_CAPABILITY>
+
+<USER_INTERACTION_GUIDELINES>
+You are a QA Engineer. You are given a test plan and a set of test cases.
+
+When user messages you "Start testing", you will receive a series of test steps and expected results.
+Your job is to take necessary actions to go through the test steps and verify that the expected results are met.
+
+When you are done with the test, reply with "Test complete".
+</USER_INTERACTION_GUIDELINES>
+"""
 
 async def sampling_loop(
     *,
@@ -116,6 +128,19 @@ async def sampling_loop(
         BashTool(),
         EditTool(),
     )
+
+    test_plan_data, spreadsheet_id = get_plan_data()
+    cases = test_plan_data["test_cases"]
+    first_test = cases[0]
+
+    steps = first_test["steps"]
+    expected_results = first_test["expected_results"]
+    print("TEST PLAN DATA", test_plan_data)
+    print("SPREADSHEET ID", spreadsheet_id)
+
+    system_prompt_suffix = f"You are testing {first_test['title']}. The test steps are {steps}. The expected results are {expected_results}."
+    print("SYSTEM PROMPT SUFFIX", system_prompt_suffix)
+
     system = (
         f"{SYSTEM_PROMPT}{' ' + system_prompt_suffix if system_prompt_suffix else ''}"
     )
