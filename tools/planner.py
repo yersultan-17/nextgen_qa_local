@@ -6,8 +6,10 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import json
 import dotenv
+from datetime import datetime
+from jira import create_issue
 
-dotenv.load_dotenv()
+dotenv.load_dotenv("../.env")
 
 class TestPlanSpreadsheetGenerator:
     def __init__(self, google_creds_file: str, anthropic_api_key: str):
@@ -158,7 +160,6 @@ class TestPlanSpreadsheetGenerator:
         Returns:
             dict: Generated test plan data
         """
-        # Create context for the prompt based on provided description
         context = f"""
         Create a comprehensive test plan for: {website_url}
 
@@ -326,10 +327,10 @@ class TestPlanSpreadsheetGenerator:
             body={'values': overview_data}
         ).execute()
         
-        # Populate Test Cases sheet
+        # Populate Test Cases sheet with Jira Issue column
         test_case_headers = [
             'ID', 'Category', 'Title', 'Description', 'Prerequisites', 
-            'Steps', 'Expected Results', 'Priority', 'Status'
+            'Steps', 'Expected Results', 'Priority', 'Status', 'Jira Issue'
         ]
         
         test_case_data = [test_case_headers]
@@ -343,7 +344,8 @@ class TestPlanSpreadsheetGenerator:
                 '\n'.join(tc['steps']),
                 tc['expected_results'],
                 tc['priority'],
-                tc['status']
+                tc['status'],
+                ''  # Empty Jira Issue cell
             ])
         
         self.sheets_service.spreadsheets().values().update(
@@ -353,21 +355,94 @@ class TestPlanSpreadsheetGenerator:
             body={'values': test_case_data}
         ).execute()
 
-    def get_spreadsheet_url(self, spreadsheet_id: str) -> str:
+    def create_jira_issues_for_failures(self, spreadsheet_id: str, failed_rows: List[List]) -> List[Dict]:
         """
-        Get the shareable URL for the spreadsheet.
-        
+        Create Jira issues for failed test cases.
+
         Args:
             spreadsheet_id (str): The ID of the spreadsheet
+            failed_rows (List[List]): List of rows containing failed test case data
             
         Returns:
-            str: The shareable URL
+            List[Dict]: List of created Jira issues
         """
-        return f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit"
+        created_issues = []
+
+        # Get headers to find column indices
+        result = self.sheets_service.spreadsheets().values().get(
+            spreadsheetId=spreadsheet_id,
+            range='Test Cases!A1:J1'
+        ).execute()
+
+        headers = result['values'][0]
+        id_col = headers.index('ID')
+        title_col = headers.index('Title')
+        desc_col = headers.index('Description')
+        steps_col = headers.index('Steps')
+        expected_col = headers.index('Expected Results')
+        jira_col = headers.index('Jira Issue') if 'Jira Issue' in headers else len(headers)
+
+        for row in failed_rows:
+            # Skip if already has a Jira issue
+            if len(row) > jira_col and row[jira_col]:
+                continue
+                
+            # Create Jira issue summary
+            summary = f"Failed Test Case: {row[title_col]} ({row[id_col]})"
+            
+            # Create detailed description
+            description = f"""
+        Test Case Failed: {row[id_col]}
+
+        Description:
+        {row[desc_col]}
+
+        Steps to Reproduce:
+        {row[steps_col]}
+
+        Expected Results:
+        {row[expected_col]}
+
+        Test Environment:
+        - Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+        - Spreadsheet: {self.get_spreadsheet_url(spreadsheet_id)}
+        """
+            
+            try:
+                # Create Jira issue
+                jira_response = create_issue(summary, description)
+                
+                # Debug print
+                print(f"Jira response for {row[id_col]}: {jira_response}")
+                
+                if jira_response:
+                    # Add created issue to our list
+                    created_issues.append({
+                        'test_case_id': row[id_col],
+                        'jira_key': str(jira_response),  # Convert response to string for now
+                        'summary': summary
+                    })
+                    
+                    # Update spreadsheet with Jira reference
+                    row_num = failed_rows.index(row) + 2
+                    self.sheets_service.spreadsheets().values().update(
+                        spreadsheetId=spreadsheet_id,
+                        range=f'Test Cases!{chr(65 + jira_col)}{row_num}',
+                        valueInputOption='RAW',
+                        body={'values': [[str(jira_response)]]}  # Convert response to string
+                    ).execute()
+                    
+                    print(f"Created Jira issue for test case {row[id_col]}")
+                        
+            except Exception as e:
+                print(f"Error creating Jira issue for test case {row[id_col]}: {str(e)}")
+                continue
+                
+        return created_issues
 
     def update_test_case_statuses(self, spreadsheet_id: str, updates: List[Dict[str, str]]):
         """
-        Update the status of multiple test cases.
+        Update the status of multiple test cases and create Jira issues for failures.
         
         Args:
             spreadsheet_id (str): The ID of the spreadsheet
@@ -386,7 +461,7 @@ class TestPlanSpreadsheetGenerator:
             # Get all test cases from the spreadsheet
             result = self.sheets_service.spreadsheets().values().get(
                 spreadsheetId=spreadsheet_id,
-                range='Test Cases!A:I'
+                range='Test Cases!A:J'  # Include Jira Issue column
             ).execute()
             
             values = result.get('values', [])
@@ -419,6 +494,8 @@ class TestPlanSpreadsheetGenerator:
             
             # Find and update each test case
             updated_ids = set()
+            failed_rows = []  # Track failed test cases
+
             for row in values[1:]:  # Skip header row
                 row_number += 1
                 if not row:  # Skip empty rows
@@ -426,11 +503,16 @@ class TestPlanSpreadsheetGenerator:
                     
                 test_case_id = row[id_col]
                 if test_case_id in status_map:
+                    new_status = status_map[test_case_id]
                     batch_updates.append({
                         'range': f'Test Cases!{chr(65 + status_col)}{row_number}',
-                        'values': [[status_map[test_case_id]]]
+                        'values': [[new_status]]
                     })
                     updated_ids.add(test_case_id)
+                    
+                    # If status is Failed, add to failed_rows
+                    if new_status == 'Failed':
+                        failed_rows.append(row)
             
             # Check if any test case IDs weren't found
             not_found_ids = set(status_map.keys()) - updated_ids
@@ -499,11 +581,33 @@ class TestPlanSpreadsheetGenerator:
                         spreadsheetId=spreadsheet_id,
                         body={'requests': color_requests}
                     ).execute()
+
+                # Create Jira issues for failed test cases
+                if failed_rows:
+                    print("Creating Jira issues for failed test cases...")
+                    created_issues = self.create_jira_issues_for_failures(spreadsheet_id, failed_rows)
+                    
+                    if created_issues:
+                        print(f"\nCreated {len(created_issues)} Jira issues:")
+                        for issue in created_issues:
+                            print(f"- {issue['test_case_id']}: {issue['jira_key']} - {issue['summary']}")
                 
                 return f"Updated {len(batch_updates)} test case(s)"
                 
         except HttpError as error:
             raise Exception(f"Error updating test cases: {str(error)}")
+
+    def get_spreadsheet_url(self, spreadsheet_id: str) -> str:
+        """
+        Get the shareable URL for the spreadsheet.
+        
+        Args:
+            spreadsheet_id (str): The ID of the spreadsheet
+            
+        Returns:
+            str: The shareable URL
+        """
+        return f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit"
 
     def generate_all(self, website_url: str, website_description: str = None, test_data: dict = None) -> Tuple[dict, str]:
         """
@@ -547,7 +651,7 @@ if __name__ == "__main__":
     generator = TestPlanSpreadsheetGenerator(google_creds_file, anthropic_api_key)
     
     # Generate new test plan
-    onsa_description = """
+    website_description = """
     A tool that helps sales people to prepare for meetings. Features include:
     - LinkedIn URL input and analysis
     - Profile data extraction
@@ -555,24 +659,25 @@ if __name__ == "__main__":
     - Company and person insights
     """
     
-    onsa_test_data = {
+    test_data = {
         "linkedin_url": "https://www.linkedin.com/in/bayramannakov",
         "expected_past_employment": "Founder Institute"
     }
     
-    # Generate test plan for Onsa.ai
     test_plan_data, spreadsheet_id = generator.generate_all(
         website_url="app.onsa.ai",
-        website_description=onsa_description,
-        test_data=onsa_test_data
+        website_description=website_description,
+        test_data=test_data
     )
+    
+    # Get the shareable URL
     shareable_url = generator.get_spreadsheet_url(spreadsheet_id)
     print(f"Generated spreadsheet, URL: {shareable_url}")
     
     # Example of updating test case statuses
     status_updates = [
         {'id': 'TC001', 'status': 'Passed'},
-        {'id': 'TC002', 'status': 'Failed'},
+        {'id': 'TC002', 'status': 'Failed'},  # Will create Jira issue
         {'id': 'TC003', 'status': 'In Progress'}
     ]
     

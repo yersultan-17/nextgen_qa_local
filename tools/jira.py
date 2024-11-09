@@ -17,20 +17,34 @@ jira = Jira(
     cloud=True,  # Set to True if using Jira Cloud
 )
 def create_issue(summary, description):
+    """
+    Create a Jira issue and return the response as a dictionary.
+    
+    Args:
+        summary (str): Issue summary
+        description (str): Issue description
+        
+    Returns:
+        dict: Dictionary containing the created issue details
+    """
     # Define the issue fields
     issue_fields = {
         "fields": {
-            "project": {"key": "NQ"},  # Replace 'PROJ' with your project key
+            "project": {"key": "NQ"},  # Replace 'NQ' with your project key
             "summary": summary,
             "description": description,
             "issuetype": {"name": "Bug"},
         }
     }
+    
     # Create the issue
     try:
-        new_issue = jira.issue_create(fields=issue_fields["fields"])
-        print(f"Issue {new_issue} created successfully.")
-        return new_issue
+        response = jira.issue_create(fields=issue_fields["fields"])
+        # response is already a dictionary, so we can return it directly
+        print(f"Created Jira issue response: {response}")  # Debug print
+        return response
     except Exception as e:
         print(f"An error occurred: {e}")
-create_issue("Test Issue", "This is a test issue created via the Jira API.")
+        return None
+
+#create_issue("Test Issue", "This is a test issue created via the Jira API.")
