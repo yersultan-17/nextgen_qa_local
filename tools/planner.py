@@ -247,7 +247,7 @@ def main():
         raise ValueError("Please set ANTHROPIC_API_KEY environment variable")
     
     # Path to your Google service account JSON file
-    google_creds_file = "empatika-labs-sales-6fdb147f3722.json"
+    google_creds_file = "empatika-labs-sales-20e446c8764d.json"
     
     generator = TestPlanSpreadsheetGenerator(anthropic_api_key, google_creds_file)
 
