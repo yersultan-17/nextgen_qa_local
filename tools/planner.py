@@ -11,6 +11,8 @@ from jira import create_issue
 
 dotenv.load_dotenv("../.env")
 
+GOOGLE_CREDS_FILE = "tools/empatika-labs-sales-20e446c8764d.json"
+
 class TestPlanSpreadsheetGenerator:
     def __init__(self, google_creds_file: str, anthropic_api_key: str):
         """
@@ -636,6 +638,37 @@ class TestPlanSpreadsheetGenerator:
         print("Test plan data populated")
         
         return test_plan_data, spreadsheet_id
+    
+def get_plan_data():
+    # Load environment variables
+    anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not anthropic_api_key:
+        raise ValueError("Please set ANTHROPIC_API_KEY environment variable")
+    
+    # Initialize generator
+    generator = TestPlanSpreadsheetGenerator(GOOGLE_CREDS_FILE, anthropic_api_key)
+    
+    # Generate new test plan
+    onsa_description = """
+    A tool that helps sales people to prepare for meetings. Features include:
+    - LinkedIn URL input and analysis
+    - Profile data extraction
+    - Meeting preparation memo generation
+    - Company and person insights
+    """
+    
+    onsa_test_data = {
+        "linkedin_url": "https://www.linkedin.com/in/bayramannakov",
+        "expected_past_employment": "Founder Institute"
+    }
+    
+    # Generate test plan for Onsa.ai
+    test_plan_data, spreadsheet_id = generator.generate_all(
+        website_url="app.onsa.ai",
+        website_description=onsa_description,
+        test_data=onsa_test_data
+    )
+    return test_plan_data, spreadsheet_id
 
 
 # Example usage
@@ -644,11 +677,9 @@ if __name__ == "__main__":
     anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
     if not anthropic_api_key:
         raise ValueError("Please set ANTHROPIC_API_KEY environment variable")
-
-    google_creds_file = "empatika-labs-sales-20e446c8764d.json"
     
     # Initialize generator
-    generator = TestPlanSpreadsheetGenerator(google_creds_file, anthropic_api_key)
+    generator = TestPlanSpreadsheetGenerator(GOOGLE_CREDS_FILE, anthropic_api_key)
     
     # Generate new test plan
     website_description = """
