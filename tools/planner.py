@@ -146,58 +146,96 @@ class TestPlanSpreadsheetGenerator:
             print(f'An error occurred while sharing the spreadsheet: {error}')
             raise error
 
-    def generate_test_plan(self, website_url: str) -> dict:
+    def generate_test_plan(self, website_url: str, website_description: str = None, test_data: dict = None) -> dict:
         """
-        Generate test plan using Claude API.
+        Generate test plan using Claude API with specific test data.
         
         Args:
             website_url (str): URL of the website to test
+            website_description (str): Description of the website's purpose and functionality
+            test_data (dict): Optional specific test data including test inputs and expected results
             
         Returns:
             dict: Generated test plan data
         """
+        # Create context for the prompt based on provided description
+        context = f"""
+        Create a comprehensive test plan for: {website_url}
+
+        Website Description:
+        {website_description or 'A web application that needs testing across functionality, performance, security, and user experience aspects.'}
+
+        Test Data Examples:
+        {json.dumps(test_data, indent=2) if test_data else 'Generate appropriate test data based on the website description.'}
+        """
+
         prompt = f"""
-        Create a structured test plan for {website_url} in the following JSON format:
+        Based on the above context, create a structured test plan in the following JSON format.
+        Consider all aspects of testing including but not limited to:
+        - Core functionality testing specific to the website's purpose
+        - User interface and experience testing
+        - Performance testing
+        - Security testing
+        - Error handling
+        - Cross-browser compatibility
+        - Mobile responsiveness
+        - Integration testing where applicable
+        - Edge cases and boundary testing
+        
+        Return the response in this exact JSON format:
         {{
             "overview": {{
-                "scope": "",
-                "objectives": [],
-                "test_environment": []
+                "scope": "Automated testing of {website_url}'s core functionality and user experience",
+                "objectives": [
+                    // Generate 5-7 specific objectives based on the website description
+                ],
+                "test_environment": [
+                    "Chrome Browser Version 120+",
+                    "Firefox Browser Version 120+",
+                    "Safari Browser Version 17+",
+                    "Mobile Chrome on iOS 17+",
+                    "Mobile Chrome on Android 14+"
+                ]
             }},
             "test_cases": [
                 {{
                     "id": "TC001",
-                    "category": "",
-                    "title": "",
-                    "description": "",
-                    "prerequisites": "",
-                    "steps": [],
-                    "expected_results": "",
-                    "priority": "",
+                    "category": "Category Name",
+                    "title": "Test Case Title",
+                    "description": "Detailed description of what is being tested",
+                    "prerequisites": "Required setup or conditions",
+                    "steps": [
+                        "Step 1",
+                        "Step 2",
+                        "..."
+                    ],
+                    "expected_results": "What should happen when test is successful",
+                    "priority": "High/Medium/Low",
                     "status": "Not Started"
                 }}
             ]
         }}
         
-        Include test cases for:
-        - Functional testing
-        - UI/UX testing
-        - Performance testing
-        - Security testing
-        - Cross-browser compatibility
-        - Mobile responsiveness
-        
-        Provide at least 3 test cases for each category.
+        Important guidelines for generating test cases:
+        1. Create at least 3 test cases for each major feature or functionality
+        2. Include specific test data and expected results where applicable
+        3. Prioritize test cases based on critical functionality
+        4. Include edge cases and error conditions
+        5. Make steps detailed and actionable
+        6. Test cases should be specific to the website's purpose and features
+        7. Include security and performance considerations
+        8. Consider user experience and accessibility
         """
         
         try:
             message = self.client.messages.create(
                 model="claude-3-5-sonnet-20241022",
                 max_tokens=4096,
-                messages=[{
-                    "role": "user",
-                    "content": prompt
-                }]
+                messages=[
+                    {"role": "user", "content": context},
+                    {"role": "assistant", "content": "I understand you want me to create a test plan for this website. I'll generate appropriate test cases based on the website's description and purpose."},
+                    {"role": "user", "content": prompt}
+                ]
             )
             return json.loads(message.content[0].text)
         except Exception as e:
@@ -467,12 +505,14 @@ class TestPlanSpreadsheetGenerator:
         except HttpError as error:
             raise Exception(f"Error updating test cases: {str(error)}")
 
-    def generate_all(self, website_url: str) -> Tuple[dict, str]:
+    def generate_all(self, website_url: str, website_description: str = None, test_data: dict = None) -> Tuple[dict, str]:
         """
         Generate complete test plan and spreadsheet.
         
         Args:
             website_url (str): URL of the website to test
+            website_description (str): Description of the website's purpose and functionality
+            test_data (dict): Optional specific test data
             
         Returns:
             Tuple[dict, str]: Test plan data and spreadsheet ID
@@ -482,7 +522,7 @@ class TestPlanSpreadsheetGenerator:
         print(f"Test plan spreadsheet created: {spreadsheet_id}")
         
         # Generate test plan using Claude
-        test_plan_data = self.generate_test_plan(website_url)
+        test_plan_data = self.generate_test_plan(website_url, website_description, test_data)
         print("Test plan generated")
         
         # Format and populate the spreadsheet
@@ -507,8 +547,25 @@ if __name__ == "__main__":
     generator = TestPlanSpreadsheetGenerator(google_creds_file, anthropic_api_key)
     
     # Generate new test plan
-    website_url = "https://www.example.com"
-    test_plan_data, spreadsheet_id = generator.generate_all(website_url)
+    onsa_description = """
+    A tool that helps sales people to prepare for meetings. Features include:
+    - LinkedIn URL input and analysis
+    - Profile data extraction
+    - Meeting preparation memo generation
+    - Company and person insights
+    """
+    
+    onsa_test_data = {
+        "linkedin_url": "https://www.linkedin.com/in/bayramannakov",
+        "expected_past_employment": "Founder Institute"
+    }
+    
+    # Generate test plan for Onsa.ai
+    test_plan_data, spreadsheet_id = generator.generate_all(
+        website_url="app.onsa.ai",
+        website_description=onsa_description,
+        test_data=onsa_test_data
+    )
     shareable_url = generator.get_spreadsheet_url(spreadsheet_id)
     print(f"Generated spreadsheet, URL: {shareable_url}")
     
