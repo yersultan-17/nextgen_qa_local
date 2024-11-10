@@ -15,10 +15,44 @@ jira = Jira(
     password=os.getenv('JIRA_TOKEN'),
     cloud=True)
 
+def attach_base64_image(issue_key: str, base64_image: str, filename: str = "screenshot.png") -> bool:
+    """
+    Attach a base64 encoded image to a Jira issue.
+    
+    Args:
+        issue_key (str): The Jira issue key
+        base64_image (str): Base64 encoded image string
+        filename (str): Name for the attached file
+        
+    Returns:
+        bool: True if attachment was successful, False otherwise
+    """
+    try:
+        # Remove data URL prefix if present
+        if ',' in base64_image:
+            base64_image = base64_image.split(',')[1]
+        
+        # Decode base64 string to bytes
+        image_data = base64.b64decode(base64_image)
+        
+        # Create file-like object
+        file_obj = io.BytesIO(image_data)
+        
+        # Attach to Jira issue
+        jira.add_attachment(
+            issue_id=issue_key,
+            filename=filename,
+            attachment=file_obj
+        )
+        print(f"Successfully attached image to {issue_key}")
+        return True
+        
+    except Exception as e:
+        print(f"Error attaching image to {issue_key}: {e}")
+        return False
 
 
-
-def create_issue(summary: str, description: str, screenshot_path: Optional[str] = None) -> Dict:
+def create_issue(summary: str, description: str, base64_image: Optional[str] = None) -> Dict:
     """
     Create a Jira issue with optional screenshot attachment.
     
@@ -43,11 +77,8 @@ def create_issue(summary: str, description: str, screenshot_path: Optional[str] 
         print(f"Created issue: {response['key']}")
         
         # Attach screenshot if provided
-        if screenshot_path and os.path.exists(screenshot_path):
-            jira.add_attachment(
-                issue_id=response['key'],
-                filename=screenshot_path
-            )
+        if base64_image:
+            attach_base64_image(response['key'], base64_image)
             print(f"Attached screenshot to {response['key']}")
         
         return {
@@ -112,10 +143,10 @@ Test Environment:
 """
         try:
             # Get screenshot path for this test case if available
-            screenshot_path = screenshots_dict.get(test_case_id) if screenshots_dict else None
-            
-            # Create issue with screenshot if available
-            jira_response = create_issue(summary, description, screenshot_path)
+            base64_image = screenshots_dict.get(test_case_id) if screenshots_dict else None
+                
+                # Create issue with screenshot if available
+                jira_response = create_issue(summary, description, base64_image)
             
             if jira_response:
                 created_issues.append({
