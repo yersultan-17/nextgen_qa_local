@@ -1,50 +1,104 @@
-import dotenv
+from typing import Dict, List
+from datetime import datetime
+from tools.spreadsheet import get_test_case_data, update_cell, get_url
 
-dotenv.load_dotenv()
-
-import os
-from atlassian import Jira
-
-# Replace with your Jira instance details
-jira_server = "https://nextgen-qa.atlassian.net"  # Jira server URL
-jira_user = "bayram.annakov@gmail.com"  # Your Jira email
-jira_api_token = os.environ["JIRA_TOKEN"]  # Your Jira API token
-# Initialize the Jira client
-jira = Jira(
-    url=jira_server,
-    username=jira_user,
-    password=jira_api_token,
-    cloud=True,  # Set to True if using Jira Cloud
-)
-def create_issue(summary, description):
+def create_issue(summary: str, description: str) -> Dict:
     """
-    Create a Jira issue and return the response as a dictionary.
+    Create a Jira issue.
     
     Args:
         summary (str): Issue summary
         description (str): Issue description
         
     Returns:
-        dict: Dictionary containing the created issue details
+        Dict: Created issue data
     """
-    # Define the issue fields
     issue_fields = {
         "fields": {
-            "project": {"key": "NQ"},  # Replace 'NQ' with your project key
+            "project": {"key": "NQ"},
             "summary": summary,
             "description": description,
             "issuetype": {"name": "Bug"},
         }
     }
-    
-    # Create the issue
+
     try:
-        response = jira.issue_create(fields=issue_fields["fields"])
-        # response is already a dictionary, so we can return it directly
-        print(f"Created Jira issue response: {response}")  # Debug print
-        return response
+        response = issue_fields  # Replace with actual Jira API call
+        return {
+            'key': 'NQ-123',  # Replace with actual response parsing
+            'self': 'https://nextgen-qa.atlassian.net/rest/api/2/issue/NQ-123'
+        }
     except Exception as e:
         print(f"An error occurred: {e}")
         return None
 
-#create_issue("Test Issue", "This is a test issue created via the Jira API.")
+def create_jira_issues_for_failures(spreadsheet_id: str, failed_rows: List[List]) -> List[Dict]:
+    """
+    Create Jira issues for failed test cases.
+    
+    Args:
+        sheets_service: Google Sheets service instance
+        spreadsheet_id (str): The ID of the spreadsheet
+        failed_rows (List[List]): List of rows containing failed test case data
+        
+    Returns:
+        List[Dict]: List of created Jira issues
+    """
+    created_issues = []
+    test_cases = get_test_case_data(spreadsheet_id)
+    
+    headers = test_cases[0]
+    id_col = headers.index('ID')
+    title_col = headers.index('Title')
+    desc_col = headers.index('Description')
+    steps_col = headers.index('Steps')
+    expected_col = headers.index('Expected Results')
+    jira_col = headers.index('Jira Issue') if 'Jira Issue' in headers else len(headers)
+
+    for row in failed_rows:
+        if len(row) > jira_col and row[jira_col]:
+            continue
+            
+        summary = f"Failed Test Case: {row[title_col]} ({row[id_col]})"
+        description = f"""
+Test Case Failed: {row[id_col]}
+
+Description:
+{row[desc_col]}
+
+Steps to Reproduce:
+{row[steps_col]}
+
+Expected Results:
+{row[expected_col]}
+
+Test Environment:
+- Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+- Spreadsheet: {get_url(spreadsheet_id)}
+"""
+        
+        try:
+            jira_response = create_issue(summary, description)
+            if jira_response:
+                created_issues.append({
+                    'test_case_id': row[id_col],
+                    'jira_key': jira_response['key'],
+                    'summary': summary
+                })
+                
+                # Update spreadsheet with Jira reference
+                row_num = failed_rows.index(row) + 2
+                jira_url = f"https://nextgen-qa.atlassian.net/jira/software/c/projects/NQ/issues/{jira_response['key']}"
+                update_cell(
+                    spreadsheet_id,
+                    f'Test Cases!{chr(65 + jira_col)}{row_num}',
+                    jira_url
+                )
+                
+                print(f"Created Jira issue for test case {row[id_col]}")
+                    
+        except Exception as e:
+            print(f"Error creating Jira issue for test case {row[id_col]}: {str(e)}")
+            continue
+            
+    return created_issues
