@@ -47,6 +47,8 @@ This framework provides end-to-end automation for UI testing:
 
 # Below is the original README from Anthropic Computer Use (for Mac)
 
+https://x.com/deedydas/status/1849481225041559910
+
 ## Anthropic Computer Use (for Mac)
 
 [Anthropic Computer Use](https://github.com/anthropics/anthropic-quickstarts/blob/main/computer-use-demo/README.md) is a beta Anthropic feature which runs a Docker image with Ubuntu and controls it. This fork allows you to run it natively on macOS, providing direct system control through native macOS commands and utilities.
