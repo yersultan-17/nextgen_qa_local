@@ -1,4 +1,53 @@
-# Anthropic Computer Use (for Mac)
+# Phaedrus - Automated UI Testing Framework Powered by Anthropic Computer Use
+
+Proof-of-concept framework for UI testing powered by AI that combines test plan generation, test execution, and result tracking using Claude 3.5 Sonnet (regular model and computer use), Streamlit, Google Sheets, and Jira integration. Presented at NextGen AI Agents: Computer Use Hackathon, Nov 9-10, 2024.
+
+Presentation link: https://drive.google.com/file/d/1xl_hLYxD_nHRGAnk0aB7dozV8AOj7ttn/view?usp=share_link
+
+Team: 
+[Bayram Annakov](https://www.linkedin.com/in/bayramannakov/)
+[Yersultan Sapar](https://www.linkedin.com/in/yersultan/)
+
+## Overview
+
+This framework provides end-to-end automation for UI testing:
+
+1. **Test Plan Generation**: Automatically generates test plans using Claude 3.5 Sonnet based on website description and requirements
+2. **Test Execution**: Executes tests through automated browser interactions using Claude 3.5 Sonnet and Playwright
+3. **Result Tracking**: Records test results in Google Sheets and creates Jira tickets for failures
+4. **Visual Verification**: Captures and stores screenshots for test evidence
+
+## Key Components
+
+- `streamlit.py`: Web interface for test execution and monitoring
+- `loop.py`: Core test execution engine using Claude 3.5 Sonnet
+- `planner.py`: Test plan generation using Claude 3.5 Sonnet
+- `jira.py`: Jira integration for issue tracking
+- `spreadsheet.py`: Google Sheets integration for test plan and results management
+- `record_result.py`: Test result recording with screenshot capture
+
+## Features
+
+- Automated test plan generation based on website analysis
+- Browser automation with Chrome/Firefox/WebKit support
+- Real-time test execution monitoring
+- Automatic screenshot capture for visual verification
+- Google Sheets integration for test plan management
+- Jira ticket creation for test failures
+- Support for multiple LLM providers (Anthropic, Bedrock, Vertex)
+
+## Prerequisites
+
+- Python 3.12+
+- Google Cloud credentials
+- Jira API token
+- Anthropic API key
+- Streamlit
+- Google Sheets API access
+
+# Below is the original README from Anthropic Computer Use (for Mac)
+
+## Anthropic Computer Use (for Mac)
 
 [Anthropic Computer Use](https://github.com/anthropics/anthropic-quickstarts/blob/main/computer-use-demo/README.md) is a beta Anthropic feature which runs a Docker image with Ubuntu and controls it. This fork allows you to run it natively on macOS, providing direct system control through native macOS commands and utilities.
 
