@@ -769,6 +769,29 @@ class TestPlanSpreadsheetGenerator:
         """
         return f"https://docs.google.com/spreadsheets/d/{spreadsheet_id}/edit"
 
+    
+    def create_spreadsheet_for_test_plan(self, test_plan_data: dict, website_url: str) -> str:
+        """
+        Create a Google Spreadsheet for the test plan based on the test plan data.
+        
+        Args:
+            test_plan_data (dict): Test plan data
+            website_url (str): URL of the website being tested
+            
+        Returns:
+            str: The ID of the created spreadsheet
+        """
+        # Create a new spreadsheet
+        spreadsheet_id, sheet_ids = self.create_spreadsheet(f"Test Plan - {website_url}")
+        
+        # Format and populate the spreadsheet
+        self.format_spreadsheet(spreadsheet_id, sheet_ids)
+        print("Spreadsheet formatted")
+        self.populate_test_plan(spreadsheet_id, test_plan_data)
+        print("Test plan data populated")
+        
+        return spreadsheet_id
+    
     def generate_all(self, website_url: str, website_description: str = None, test_data: dict = None) -> Tuple[dict, str]:
         """
         Generate complete test plan and spreadsheet.
@@ -781,29 +804,17 @@ class TestPlanSpreadsheetGenerator:
         Returns:
             Tuple[dict, str]: Test plan data and spreadsheet ID
         """
-        # Create and populate spreadsheet
-        spreadsheet_id, sheet_ids = self.create_spreadsheet(f"Test Plan - {website_url}")
-        print(f"Test plan spreadsheet created: {spreadsheet_id}")
-        
+
         # Generate test plan using Claude
         test_plan_data = self.generate_test_plan(website_url, website_description, test_data)
         print("Test plan generated")
         
-        # Format and populate the spreadsheet
-        self.format_spreadsheet(spreadsheet_id, sheet_ids)
-        print("Spreadsheet formatted")
-        self.populate_test_plan(spreadsheet_id, test_plan_data)
-        print("Test plan data populated")
+        # Create a spreadsheet for the test plan
+        spreadsheet_id = self.create_spreadsheet_for_test_plan(test_plan_data, website_url)
         
         return test_plan_data, spreadsheet_id
     
 def get_plan_data(website_url: str):
-    if website_url in MOCK_TEST_PLANS:
-        path_to_mock_data = MOCK_TEST_PLANS[website_url]
-        with open(path_to_mock_data, "r") as file:
-            test_plan_data = json.load(file)
-        return test_plan_data, None
-
     # Load environment variables
     anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
     firecrawl_api_key = os.getenv("FIRECRAWL_API_KEY")
@@ -818,6 +829,15 @@ def get_plan_data(website_url: str):
         anthropic_api_key=anthropic_api_key,
         firecrawl_api_key=firecrawl_api_key
     )
+
+    if website_url in MOCK_TEST_PLANS:
+        print(f"Using mock data for website: {website_url}")
+        path_to_mock_data = MOCK_TEST_PLANS[website_url]
+        with open(path_to_mock_data, "r") as file:
+            test_plan_data = json.load(file)
+            spreadsheet_id = generator.create_spreadsheet_for_test_plan(test_plan_data, website_url)
+
+        return test_plan_data, spreadsheet_id
 
     # Analyze website and generate test plan
     test_plan_data, spreadsheet_id = generator.analyze_website_and_generate_test_plan(website_url)
