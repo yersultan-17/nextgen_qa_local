@@ -7,7 +7,7 @@ from googleapiclient.errors import HttpError
 import json
 import dotenv
 from datetime import datetime
-from jira import create_issue
+from tools.jira import create_issue
 from firecrawl import FirecrawlApp
 
 
@@ -796,75 +796,47 @@ class TestPlanSpreadsheetGenerator:
         
         return test_plan_data, spreadsheet_id
     
-def get_plan_data():
-    # Load environment variables
-    anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
-    if not anthropic_api_key:
-        raise ValueError("Please set ANTHROPIC_API_KEY environment variable")
-    
-    # Initialize generator
-    generator = TestPlanSpreadsheetGenerator(GOOGLE_CREDS_FILE, anthropic_api_key)
-    
-    # Generate new test plan
-    onsa_description = """
-    A tool that helps sales people to prepare for meetings. Features include:
-    - LinkedIn URL input and analysis
-    - Profile data extraction
-    - Meeting preparation memo generation
-    - Company and person insights
-    """
-    
-    onsa_test_data = {
-        "linkedin_url": "https://www.linkedin.com/in/bayramannakov",
-        "expected_past_employment": "Founder Institute"
-    }
-    
-    # Generate test plan for Onsa.ai
-    test_plan_data, spreadsheet_id = generator.generate_all(
-        website_url="app.onsa.ai",
-        website_description=onsa_description,
-        test_data=onsa_test_data
-    )
-    return test_plan_data, spreadsheet_id
-
-
-# Example usage
-if __name__ == "__main__":
+def get_plan_data(website_url: str):
     # Load environment variables
     anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
     firecrawl_api_key = os.getenv("FIRECRAWL_API_KEY")
     if not anthropic_api_key or not firecrawl_api_key:
         raise ValueError("Please set ANTHROPIC_API_KEY and FIRECRAWL_API_KEY environment variables")
 
-    google_creds_file = "empatika-labs-sales-20e446c8764d.json"
-    
+    google_creds_file = GOOGLE_CREDS_FILE
+
     # Initialize generator with all necessary API keys
     generator = TestPlanSpreadsheetGenerator(
         google_creds_file=google_creds_file,
         anthropic_api_key=anthropic_api_key,
         firecrawl_api_key=firecrawl_api_key
     )
-    
-    # Analyze website and generate test plan
-    website_url = "https://app.onsa.ai"
-    test_plan_data, spreadsheet_id = generator.analyze_website_and_generate_test_plan(website_url)
-    
-    # Get the shareable URL
-    shareable_url = generator.get_spreadsheet_url(spreadsheet_id)
-    print(f"\nTest plan generated: {shareable_url}")
-    
-    # Update test case statuses
-    updates = [
-        {"id": "TC001", "status": "Failed"},
-        {"id": "TC002", "status": "Passed"},
-        {"id": "TC003", "status": "In Progress"}
-    ]
 
-    try:
-        result = generator.update_test_case_statuses(spreadsheet_id, updates)
-        print(f"Test case statuses updated: {result}")
-    except Exception as e:
-        print(f"Error updating test cases: {str(e)}")
+    # Analyze website and generate test plan
+    test_plan_data, spreadsheet_id = generator.analyze_website_and_generate_test_plan(website_url)
+    return test_plan_data, spreadsheet_id
+
+# Example usage
+if __name__ == "__main__":
+    website_url = "https://app.onsa.ai"
+    test_plan_data, spreadsheet_id = get_plan_data(website_url)
+    
+    # # Get the shareable URL
+    # shareable_url = generator.get_spreadsheet_url(spreadsheet_id)
+    # print(f"\nTest plan generated: {shareable_url}")
+    
+    # # Update test case statuses
+    # updates = [
+    #     {"id": "TC001", "status": "Failed"},
+    #     {"id": "TC002", "status": "Passed"},
+    #     {"id": "TC003", "status": "In Progress"}
+    # ]
+
+    # try:
+    #     result = generator.update_test_case_statuses(spreadsheet_id, updates)
+    #     print(f"Test case statuses updated: {result}")
+    # except Exception as e:
+    #     print(f"Error updating test cases: {str(e)}")
 
 
     
