@@ -22,7 +22,7 @@ from anthropic.types.beta import (
     BetaToolResultBlockParam,
 )
 
-from tools import BashTool, ComputerTool, EditTool, ToolCollection, ToolResult
+from tools import BashTool, ComputerTool, EditTool, ToolCollection, ToolResult, RecordTestResultTool
 
 BETA_FLAG = "computer-use-2024-10-22"
 
@@ -109,7 +109,9 @@ Your job is to take necessary actions to go through the test steps and verify th
 For each test case, start by reading the test steps and expected results.
 Then, take the necessary actions to verify that the expected results are met. On each step, write down your actions and observations.
 
-After each test case, open new incognito tab and start a new test case.
+After you verified the results, record the status of the case case.
+
+After test case is finished and before you begin new one, open new incognito tab and start a new test case.
 
 When you are done with the test plan, reply with "Test plan complete".
 </USER_INTERACTION_GUIDELINES>
@@ -136,6 +138,7 @@ async def sampling_loop(
         ComputerTool(),
         BashTool(),
         EditTool(),
+        RecordTestResultTool(),
     )
 
     test_plan_str = ""
@@ -143,7 +146,8 @@ async def sampling_loop(
     for i, test_case in enumerate(test_cases):
         test_plan_str += f"""
 <TEST_CASE_{i + 1}>
-Test title: {test_case['title']}.
+ID: {test_case['id']}.
+Title: {test_case['title']}.
 Description: {test_case['description']}.
 Prerequisites: {test_case['prerequisites']}.
 Test steps: {test_case['steps']}.
