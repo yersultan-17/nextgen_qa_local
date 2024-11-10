@@ -111,6 +111,7 @@ async def main():
         if website_url:
             # Initiate testing process with the provided URL
             test_plan_data, spreadsheet_id = get_plan_data(website_url=website_url)
+            print(test_plan_data)
             st.session_state.test_cases = test_plan_data["test_cases"]
             # st.session_state.messages.append({"role": BOT, "content": f"Starting tests for {website_url}."})
             # You can add additional logic here to begin the testing process

@@ -9,7 +9,7 @@ import dotenv
 from datetime import datetime
 from tools.jira import create_issue
 from firecrawl import FirecrawlApp
-
+from tools.mock_data import MOCK_TEST_PLANS
 
 dotenv.load_dotenv("../.env")
 
@@ -798,6 +798,12 @@ class TestPlanSpreadsheetGenerator:
         return test_plan_data, spreadsheet_id
     
 def get_plan_data(website_url: str):
+    if website_url in MOCK_TEST_PLANS:
+        path_to_mock_data = MOCK_TEST_PLANS[website_url]
+        with open(path_to_mock_data, "r") as file:
+            test_plan_data = json.load(file)
+        return test_plan_data, None
+
     # Load environment variables
     anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
     firecrawl_api_key = os.getenv("FIRECRAWL_API_KEY")

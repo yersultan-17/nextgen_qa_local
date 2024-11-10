@@ -1,0 +1,139 @@
+{
+    "overview": {
+      "scope": "Automated testing of https://app.onsa.ai's core functionality and user experience",
+      "objectives": [
+        "Verify accurate LinkedIn profile analysis and memo generation",
+        "Ensure reliable call/meeting evaluation report generation",
+        "Validate file upload functionality across supported formats",
+        "Test demo features for both profile and call analysis",
+        "Verify context addition functionality and its impact on results",
+        "Ensure secure handling of user data and uploaded files",
+        "Validate cross-browser and mobile responsiveness"
+      ],
+      "test_environment": [
+        "Chrome Browser Version 120+",
+        "Firefox Browser Version 120+",
+        "Safari Browser Version 17+",
+        "Mobile Chrome on iOS 17+",
+        "Mobile Chrome on Android 14+"
+      ]
+    },
+    "test_cases": [
+      {
+        "id": "TC001",
+        "category": "LinkedIn Profile Analysis",
+        "title": "Valid LinkedIn Profile Memo Generation",
+        "description": "Test memo generation using a valid LinkedIn profile URL",
+        "prerequisites": "Active internet connection, access to app.onsa.ai",
+        "steps": [
+          "Navigate to https://app.onsa.ai",
+          "Click on LinkedIn Profile Analysis option",
+          "Enter LinkedIn URL: https://www.linkedin.com/in/bayramannakov",
+          "Click 'Generate Memo' button",
+          "Wait for processing completion"
+        ],
+        "expected_results": "System generates a comprehensive memo about Bayram Annakov's profile",
+        "priority": "High",
+        "status": "Not Started"
+      },
+      {
+        "id": "TC002",
+        "category": "File Upload",
+        "title": "Audio File Upload for Call Evaluation",
+        "description": "Verify system accepts and processes MP3 file upload",
+        "prerequisites": "Sample MP3 file of call recording",
+        "steps": [
+          "Navigate to https://app.onsa.ai",
+          "Select Call Evaluation feature",
+          "Click upload area or drag and drop MP3 file",
+          "Verify file upload progress indicator",
+          "Wait for upload completion"
+        ],
+        "expected_results": "File uploads successfully and system begins processing",
+        "priority": "High",
+        "status": "Not Started"
+      },
+      {
+        "id": "TC003",
+        "category": "Context Addition",
+        "title": "Add Context to Profile Analysis",
+        "description": "Test adding custom context to LinkedIn profile analysis",
+        "prerequisites": "LinkedIn profile URL",
+        "steps": [
+          "Navigate to https://app.onsa.ai",
+          "Enter LinkedIn profile URL",
+          "Click 'Add Context' option",
+          "Enter context: 'Preparing for investment meeting'",
+          "Submit for analysis"
+        ],
+        "expected_results": "Memo includes provided context in analysis",
+        "priority": "Medium",
+        "status": "Not Started"
+      },
+      {
+        "id": "TC004",
+        "category": "Demo Features",
+        "title": "Demo Profile Analysis Test",
+        "description": "Verify demo profile analysis functionality",
+        "prerequisites": "None",
+        "steps": [
+          "Navigate to https://app.onsa.ai",
+          "Locate demo feature section",
+          "Select 'Try Demo Profile'",
+          "Review generated demo memo"
+        ],
+        "expected_results": "Demo memo displays with sample analysis",
+        "priority": "Medium",
+        "status": "Not Started"
+      },
+      {
+        "id": "TC005",
+        "category": "Error Handling",
+        "title": "Invalid LinkedIn URL Handling",
+        "description": "Test system response to invalid LinkedIn URL input",
+        "prerequisites": "None",
+        "steps": [
+          "Navigate to https://app.onsa.ai",
+          "Enter invalid URL: 'https://linkedin.com/invalid'",
+          "Submit for analysis",
+          "Observe error message"
+        ],
+        "expected_results": "System displays clear error message about invalid URL",
+        "priority": "High",
+        "status": "Not Started"
+      },
+      {
+        "id": "TC006",
+        "category": "Performance",
+        "title": "Report Generation Response Time",
+        "description": "Verify report generation completes within acceptable time",
+        "prerequisites": "Valid LinkedIn profile URL",
+        "steps": [
+          "Navigate to https://app.onsa.ai",
+          "Submit LinkedIn profile for analysis",
+          "Start timer",
+          "Wait for report generation",
+          "Stop timer when complete"
+        ],
+        "expected_results": "Report generates within 30 seconds",
+        "priority": "Medium",
+        "status": "Not Started"
+      },
+      {
+        "id": "TC007",
+        "category": "Mobile Responsiveness",
+        "title": "Mobile Interface Functionality",
+        "description": "Test website functionality on mobile devices",
+        "prerequisites": "Mobile device with Chrome browser",
+        "steps": [
+          "Access https://app.onsa.ai on mobile device",
+          "Verify all menu items are accessible",
+          "Test file upload functionality",
+          "Check report readability"
+        ],
+        "expected_results": "All features function properly on mobile device",
+        "priority": "High",
+        "status": "Not Started"
+      }
+    ]
+  }
