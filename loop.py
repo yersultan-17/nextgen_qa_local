@@ -130,6 +130,7 @@ async def sampling_loop(
     api_response_callback: Callable[[APIResponse[BetaMessage]], None],
     api_key: str,
     only_n_most_recent_images: int | None = None,
+    only_n_most_recent_messages: int | None = None,
     max_tokens: int = 4096,
 ):
     """
@@ -174,6 +175,9 @@ Expected results: {test_case['expected_results']}.
     while True:
         if only_n_most_recent_images:
             _maybe_filter_to_n_most_recent_images(messages, only_n_most_recent_images)
+
+        if only_n_most_recent_messages:
+            messages = messages[-only_n_most_recent_messages:]
 
         if provider == APIProvider.ANTHROPIC:
             client = Anthropic(api_key=api_key)

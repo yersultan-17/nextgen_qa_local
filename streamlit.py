@@ -86,6 +86,8 @@ def setup_state():
         st.session_state.tools = {}
     if "only_n_most_recent_images" not in st.session_state:
         st.session_state.only_n_most_recent_images = 10
+    if "only_n_most_recent_messages" not in st.session_state:
+        st.session_state.only_n_most_recent_messages = 30
     if "custom_system_prompt" not in st.session_state:
         st.session_state.custom_system_prompt = load_from_storage("system_prompt") or ""
     if "hide_images" not in st.session_state:
@@ -152,13 +154,19 @@ async def main():
                 key="api_key",
                 on_change=lambda: save_to_storage("api_key", st.session_state.api_key),
             )
-
+        st.number_input(
+            "Only send N most recent messages",
+            min_value=10,
+            key="only_n_most_recent_messages",
+            help="To decrease the total tokens sent, remove older messages from the conversation",
+        )
         st.number_input(
             "Only send N most recent images",
             min_value=0,
             key="only_n_most_recent_images",
             help="To decrease the total tokens sent, remove older screenshots from the conversation",
         )
+
         st.text_area(
             "Custom System Prompt Suffix",
             key="custom_system_prompt",
@@ -254,6 +262,7 @@ async def main():
                 ),
                 api_key=st.session_state.api_key,
                 only_n_most_recent_images=st.session_state.only_n_most_recent_images,
+                only_n_most_recent_messages=st.session_state.only_n_most_recent_messages,
             )
 
 
