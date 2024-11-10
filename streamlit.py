@@ -111,6 +111,11 @@ async def main():
     website_url = st.text_input("Enter Website URL:", "")
     if st.button("Generate test plan"):
         if website_url:
+        if url:
+            # Add https:// if not present and strip whitespace
+            website_url = url.strip()
+            if not website_url.startswith(('http://', 'https://')):
+                website_url = f'https://{website_url}'
             # Initiate testing process with the provided URL
             test_plan_data, spreadsheet_id = get_plan_data(website_url=website_url)
             st.session_state.test_cases = test_plan_data["test_cases"]
