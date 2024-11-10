@@ -216,6 +216,7 @@ class TestPlanSpreadsheetGenerator:
         9. If you need personal data for testing, use:
             - Name: Bayram Annakov
             - LinkedIn: https://www.linkedin.com/in/bayramannakov
+            - Email: bayram.annakov@gmail.com
         """
         
         try:
