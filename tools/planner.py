@@ -836,10 +836,13 @@ def get_plan_data(website_url: str):
         with open(path_to_mock_data, "r") as file:
             test_plan_data = json.load(file)
     else:
+        print(f"Generating test plan for website: {website_url}")
         test_plan_data = generator.generate_test_plan(website_url)
 
+    print("Creating spreadsheet for test plan...")
     spreadsheet_id = generator.create_spreadsheet_for_test_plan(test_plan_data, website_url)
-    
+    print(f"Spreadsheet created: {generator.get_spreadsheet_url(spreadsheet_id)}")
+
     return test_plan_data, spreadsheet_id
 
 # Example usage
