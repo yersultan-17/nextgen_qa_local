@@ -9,6 +9,9 @@ from tools.spreadsheet import get_test_case_data, update_cell, get_url
 from atlassian import Jira
 import os
 
+import base64
+import io
+
 jira = Jira(
     url='https://nextgen-qa.atlassian.net',
     username='bayram.annakov@gmail.com',
