@@ -145,8 +145,8 @@ Test Environment:
             # Get screenshot path for this test case if available
             base64_image = screenshots_dict.get(test_case_id) if screenshots_dict else None
                 
-                # Create issue with screenshot if available
-                jira_response = create_issue(summary, description, base64_image)
+            # Create issue with screenshot if available
+            jira_response = create_issue(summary, description, base64_image)
             
             if jira_response:
                 created_issues.append({
