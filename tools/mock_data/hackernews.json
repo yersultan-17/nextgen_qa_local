@@ -1,0 +1,127 @@
+{
+    "overview": {
+        "scope": "Automated testing of https://hackernews.com's core functionality and user experience",
+        "objectives": [
+            "Verify all news articles are displayed correctly and are clickable",
+            "Ensure search functionality works accurately",
+            "Validate navigation and sorting of news items",
+            "Confirm proper display and functionality of comments",
+            "Verify vote/points system display",
+            "Ensure proper functioning of pagination and 'more' links"
+        ],
+        "test_environment": [
+            "Chrome Browser Version 120+",
+            "Firefox Browser Version 120+"
+        ]
+    },
+    "test_cases": [
+        {
+            "id": "TC001",
+            "category": "Navigation",
+            "title": "Homepage News Items Display",
+            "description": "Verify that news items are properly displayed on the homepage with title, points, and submitter information",
+            "prerequisites": "Website is accessible",
+            "steps": [
+                "Navigate to https://hackernews.com",
+                "Observe the news items list",
+                "Verify each news item has a title",
+                "Verify each news item shows points",
+                "Verify each news item shows the submitter",
+                "Verify each news item shows the time posted"
+            ],
+            "expected_results": "All news items should display with complete information including title, points, submitter, and timestamp",
+            "priority": "High",
+            "status": "Not Started"
+        },
+        {
+            "id": "TC002",
+            "category": "Navigation",
+            "title": "News Item Link Functionality",
+            "description": "Verify that clicking on news item titles opens the correct linked content",
+            "prerequisites": "Homepage is loaded with news items",
+            "steps": [
+                "Navigate to https://hackernews.com",
+                "Click on the first news item title",
+                "Return to Hacker News",
+                "Click on the middle news item title",
+                "Return to Hacker News",
+                "Click on the last visible news item title"
+            ],
+            "expected_results": "Each clicked link should open the correct corresponding content in a new tab or window",
+            "priority": "High",
+            "status": "Not Started"
+        },
+        {
+            "id": "TC003",
+            "category": "Navigation",
+            "title": "Pagination Functionality",
+            "description": "Verify that 'more' link works and loads additional news items",
+            "prerequisites": "Homepage is loaded",
+            "steps": [
+                "Navigate to https://hackernews.com",
+                "Scroll to the bottom of the page",
+                "Click on the 'more' link",
+                "Verify new page loads",
+                "Verify different news items are displayed",
+                "Verify page number in URL increases"
+            ],
+            "expected_results": "Clicking 'more' should load the next page with different news items",
+            "priority": "Medium",
+            "status": "Not Started"
+        },
+        {
+            "id": "TC004",
+            "category": "Search",
+            "title": "Basic Search Functionality",
+            "description": "Verify that search function returns relevant results",
+            "prerequisites": "Website is accessible",
+            "steps": [
+                "Navigate to https://hackernews.com",
+                "Locate the search box",
+                "Enter search term 'JavaScript'",
+                "Press Enter or click search",
+                "Observe search results"
+            ],
+            "expected_results": "Search results should display relevant items containing or related to 'JavaScript'",
+            "priority": "High",
+            "status": "Not Started"
+        },
+        {
+            "id": "TC005",
+            "category": "Comments",
+            "title": "Comments Display",
+            "description": "Verify that comments are properly displayed on news items",
+            "prerequisites": "News item with comments is selected",
+            "steps": [
+                "Navigate to https://hackernews.com",
+                "Click on 'comments' link for a news item with multiple comments",
+                "Verify comments are displayed in threaded format",
+                "Verify each comment shows author and timestamp",
+                "Verify nested comments are properly indented"
+            ],
+            "expected_results": "Comments should be displayed in a threaded format with proper indentation and metadata",
+            "priority": "Medium",
+            "status": "Not Started"
+        },
+        {
+            "id": "TC006",
+            "category": "UI/UX",
+            "title": "Header Navigation Links",
+            "description": "Verify all header navigation links are functional",
+            "prerequisites": "Website is accessible",
+            "steps": [
+                "Navigate to https://hackernews.com",
+                "Click on 'new' link",
+                "Return to homepage",
+                "Click on 'past' link",
+                "Return to homepage",
+                "Click on 'ask' link",
+                "Return to homepage",
+                "Click on 'show' link"
+            ],
+            "expected_results": "Each navigation link should load the correct corresponding page",
+            "priority": "High",
+            "status": "Not Started"
+        }
+    ]
+}

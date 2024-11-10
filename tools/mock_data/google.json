@@ -31,7 +31,7 @@
                 "Press Enter or click the 'Google Search' button",
                 "Observe search results"
             ],
-            "expected_results": "Search results should display relevant links including the LinkedIn profile https://www.linkedin.com/in/bayramannakov",
+            "expected_results": "Search results should display links about Elon Musk",
             "priority": "High",
             "status": "Not Started"
         },

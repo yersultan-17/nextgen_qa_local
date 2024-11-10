@@ -28,49 +28,34 @@
       "steps": [
         "Navigate to https://google.com/maps",
         "Click on the search box",
-        "Enter location 'Empire State Building'",
+        "Enter location 'AGI House SF'",
         "Press Enter or click search button"
       ],
-      "expected_results": "Search results should display with Empire State Building centered on map and info card in side panel",
+      "expected_results": "Search results should display with AGI House SF centered on map and info card in side panel",
       "priority": "High",
       "status": "Not Started"
     },
     {
-      "id": "TC002", 
-      "category": "Map Navigation",
-      "title": "Map Zoom Controls",
-      "description": "Verify zoom in/out functionality works correctly",
-      "prerequisites": "Website loaded with default map view",
-      "steps": [
-        "Navigate to https://google.com/maps",
-        "Click '+' button to zoom in 3 times",
-        "Click '-' button to zoom out 3 times",
-        "Use mouse wheel to zoom in and out",
-        "Use pinch gesture on touch devices"
-      ],
-      "expected_results": "Map should zoom smoothly with each interaction, maintaining center point",
-      "priority": "High",
-      "status": "Not Started"
-    },
-    {
-      "id": "TC003",
+      "id": "TC002",
       "category": "Directions", 
       "title": "Route Planning Between Two Points",
       "description": "Verify ability to get directions between two locations",
       "prerequisites": "Active internet connection",
       "steps": [
         "Navigate to https://google.com/maps",
-        "Click 'Directions' button",
-        "Enter 'Times Square' as starting point",
-        "Enter 'Central Park' as destination",
-        "Click 'Search'"
+        "Click on the search box",
+        "Enter location 'Shack15'",
+        "Click on 'Directions' button",
+        "Enter location 'AGI House SF' as starting point",
+        "Press Enter or click search button",
+        "Verify directions are displayed with estimated time and distance"
       ],
-      "expected_results": "Multiple route options should display with estimated time and distance",
+      "expected_results": "There should be no path to reach Shack15 from AGI House SF",
       "priority": "High",
       "status": "Not Started"
     },
     {
-      "id": "TC004",
+      "id": "TC003",
       "category": "Saved Places",
       "title": "Save Current Location",
       "description": "Verify ability to save and retrieve locations",
@@ -79,47 +64,14 @@
         "Navigate to https://google.com/maps",
         "Search for 'Statue of Liberty'",
         "Click on location marker",
-        "Click 'Save' button",
-        "Access saved places from menu"
+        "Click 'Save' button"
       ],
-      "expected_results": "Location should appear in saved places list",
+      "expected_results": "Verify sign in prompt appears",
       "priority": "Medium",
       "status": "Not Started"
     },
     {
-      "id": "TC005",
-      "category": "Performance",
-      "title": "Map Loading Performance", 
-      "description": "Verify map tiles load efficiently during navigation",
-      "prerequisites": "Standard internet connection",
-      "steps": [
-        "Navigate to https://google.com/maps",
-        "Rapidly pan across map",
-        "Quickly zoom in and out",
-        "Switch between map views"
-      ],
-      "expected_results": "Map tiles should load within 2 seconds with no visible gaps",
-      "priority": "High",
-      "status": "Not Started"
-    },
-    {
-      "id": "TC006",
-      "category": "Mobile Responsiveness",
-      "title": "Mobile Interface Adaptation",
-      "description": "Verify website adapts correctly to mobile screen",
-      "prerequisites": "Mobile device or emulator",
-      "steps": [
-        "Navigate to https://google.com/maps on mobile device",
-        "Verify search box visibility",
-        "Check menu accessibility", 
-        "Test touch gestures for navigation"
-      ],
-      "expected_results": "Interface should be properly scaled and touch-responsive",
-      "priority": "High",
-      "status": "Not Started"
-    },
-    {
-      "id": "TC007",
+      "id": "TC004",
       "category": "Error Handling",
       "title": "Invalid Location Search",
       "description": "Verify appropriate error handling for invalid searches",

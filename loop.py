@@ -115,6 +115,8 @@ After test case is finished and before you begin new one, open new incognito tab
 To open a new incognito tab, use the following keyboard shortcut: Command + T (Cmd + T)
 You are already in incognito mode, so you dont need to open a new window, only a new tab.
 
+Do not ask user for confirmation before you start a new test case. Just go through all test cases, one by one.
+
 When you are done with the test plan, reply with "Test plan complete".
 </USER_INTERACTION_GUIDELINES>
 """
