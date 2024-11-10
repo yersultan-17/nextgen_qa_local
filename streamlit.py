@@ -104,7 +104,7 @@ async def main():
 
     st.markdown(STREAMLIT_STYLE, unsafe_allow_html=True)
 
-    st.title("Phaedrus AI - quality assurance agent")
+    st.title("Phaedrus - quality assurance AI agent")
 
     st.markdown("""This is an agent for quality assurance testing of web applications. Built on top of [Mac Computer Use](https://github.com/deedy/mac_computer_use).""")
 

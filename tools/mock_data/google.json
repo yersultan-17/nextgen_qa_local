@@ -42,7 +42,6 @@
             "description": "Verify that the Google homepage loads within acceptable time limits",
             "prerequisites": "Network monitoring tools enabled",
             "steps": [
-                "Clear browser cache",
                 "Navigate to https://google.com",
                 "Measure time until page is fully interactive"
             ],
@@ -52,17 +51,20 @@
         },
         {
             "id": "TC003",
-            "category": "Mobile Responsiveness",
-            "title": "Mobile Layout Adaptation",
-            "description": "Verify that the website properly adapts to mobile screen sizes",
-            "prerequisites": "Mobile device or emulator",
+            "category": "Search Features",
+            "title": "Advanced Search Options",
+            "description": "Verify that advanced search filters and options work correctly",
+            "prerequisites": "Desktop browser",
             "steps": [
-                "Navigate to https://google.com on mobile device",
-                "Observe page layout and elements",
-                "Test search bar functionality",
-                "Verify touch interactions"
+                "Navigate to https://google.com",
+                "Click on 'Settings' below the search bar",
+                "Select 'Advanced search'",
+                "Fill in various filters (language, region, last update, etc)",
+                "Perform search with applied filters",
+                "Verify filter indicators appear in results",
+                "Check that results match the specified filters"
             ],
-            "expected_results": "All elements should be properly sized and functional on mobile device",
+            "expected_results": "Search results should reflect all applied advanced filters and options accurately",
             "priority": "High",
             "status": "Not Started"
         },
