@@ -17,6 +17,7 @@ class RecordTestResultTool(BaseAnthropicTool):
             "spreadsheet_id": {"type": "string", "description": "The ID of the spreadsheet."},
             "test_id": {"type": "string", "description": "The ID of the test case."},
             "status": {"type": "string", "enum": list(VALID_STATUSES), "description": "The status of the test case."},
+            "screenshot_path": {"type": "string", "description": "The path to the screenshot file."},
         },
         "required": ["spreadsheet_id", "test_id", "status"],
     }
