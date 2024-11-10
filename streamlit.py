@@ -59,6 +59,8 @@ class Sender(StrEnum):
 
 
 def setup_state():
+    if "spreadsheet_id" not in st.session_state:
+        st.session_state.spreadsheet_id = None
     if "test_cases" not in st.session_state:
         st.session_state.test_cases = []
     if "messages" not in st.session_state:
@@ -111,10 +113,8 @@ async def main():
         if website_url:
             # Initiate testing process with the provided URL
             test_plan_data, spreadsheet_id = get_plan_data(website_url=website_url)
-            print(test_plan_data)
             st.session_state.test_cases = test_plan_data["test_cases"]
-            # st.session_state.messages.append({"role": BOT, "content": f"Starting tests for {website_url}."})
-            # You can add additional logic here to begin the testing process
+            st.session_state.spreadsheet_id = spreadsheet_id
         else:
             st.warning("Please enter a valid website URL.")
 
@@ -233,6 +233,7 @@ async def main():
         with st.spinner("Running Agent..."):
             # run the agent sampling loop with the newest message
             st.session_state.messages = await sampling_loop(
+                spreadsheet_id=st.session_state.spreadsheet_id,
                 test_cases=st.session_state.test_cases,
                 system_prompt_suffix=st.session_state.custom_system_prompt,
                 model=st.session_state.model,

@@ -286,31 +286,31 @@ class TestPlanSpreadsheetGenerator:
             raise Exception(f"Error generating test plan: {str(e)}")
 
 
-if __name__ == "__main__":
+def get_plan_data(website_url: str):
     anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
     firecrawl_api_key = os.getenv("FIRECRAWL_API_KEY")
     if not anthropic_api_key or not firecrawl_api_key:
         raise ValueError("Please set ANTHROPIC_API_KEY and FIRECRAWL_API_KEY environment variables")
-
     # Initialize generator
     generator = TestPlanSpreadsheetGenerator(
         anthropic_api_key=anthropic_api_key,
         firecrawl_api_key=firecrawl_api_key
     )
-
-    website_url = "https://app.onsa.ai"
-
     if website_url in MOCK_TEST_PLANS:
         print(f"Using mock data for website: {website_url}")
-        with open(f"mock_data/{MOCK_TEST_PLANS[website_url]}", "r") as f:
+        with open(f"tools/mock_data/{MOCK_TEST_PLANS[website_url]}", "r") as f:
             test_plan_data = json.load(f)
     else:
         # Generate test plan and create spreadsheet
         test_plan_data = generator.generate_test_plan(website_url)
-    print(f"Test plan data: {test_plan_data}")
-    
+    print(json.dumps(test_plan_data, indent=4))
     spreadsheet_id = generator.create_spreadsheet_for_test_plan(test_plan_data, website_url)
     print(f"Spreadsheet URL: {get_url(spreadsheet_id)}")
+    return test_plan_data, spreadsheet_id
+
+if __name__ == "__main__":
+    website_url = "https://app.onsa.ai"
+    test_plan_data, spreadsheet_id = get_plan_data(website_url)
 
     updates = [
         {"id": "TC001", "status": "Passed"},

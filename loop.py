@@ -119,6 +119,7 @@ When you are done with the test plan, reply with "Test plan complete".
 
 async def sampling_loop(
     *,
+    spreadsheet_id: str,
     test_cases: list[dict[str, Any]],
     model: str,
     provider: APIProvider,
@@ -141,8 +142,11 @@ async def sampling_loop(
         RecordTestResultTool(),
     )
 
-    test_plan_str = ""
-
+    test_plan_str = f"""
+<SPREADSHEET_ID>
+You will record results to the spreadsheet with ID: {spreadsheet_id}.
+</SPREADSHEET_ID>
+"""
     for i, test_case in enumerate(test_cases):
         test_plan_str += f"""
 <TEST_CASE_{i + 1}>

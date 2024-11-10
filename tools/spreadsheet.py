@@ -3,9 +3,7 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-GOOGLE_CREDS_FILE = "empatika-labs-sales-20e446c8764d.json"
-
-
+GOOGLE_CREDS_FILE = "tools/empatika-labs-sales-20e446c8764d.json"
 
 def get_spreadsheet_services(google_creds_file: str):
     """Initialize Google Sheets and Drive services."""
