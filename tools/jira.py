@@ -1,6 +1,19 @@
+import dotenv
+
+dotenv.load_dotenv("../.env")
+
 from typing import Dict, List
 from datetime import datetime
 from tools.spreadsheet import get_test_case_data, update_cell, get_url
+
+from atlassian import Jira
+import os
+
+jira = Jira(
+    url='https://nextgen-qa.atlassian.net',
+    username='bayram.annakov@gmail.com',
+    token=os.getenv('JIRA_TOKEN'))
+
 
 def create_issue(summary: str, description: str) -> Dict:
     """
@@ -23,10 +36,10 @@ def create_issue(summary: str, description: str) -> Dict:
     }
 
     try:
-        response = issue_fields  # Replace with actual Jira API call
+        response = jira.issue_create(fields=issue_fields)
         return {
-            'key': 'NQ-123',  # Replace with actual response parsing
-            'self': 'https://nextgen-qa.atlassian.net/rest/api/2/issue/NQ-123'
+            'key': response['key'],
+            'self': response['self'],
         }
     except Exception as e:
         print(f"An error occurred: {e}")
@@ -102,3 +115,5 @@ Test Environment:
             continue
             
     return created_issues
+
+create_issue("Test", "Test")

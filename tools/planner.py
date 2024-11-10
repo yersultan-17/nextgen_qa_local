@@ -211,10 +211,9 @@ class TestPlanSpreadsheetGenerator:
         4. Include edge cases and error conditions
         5. Make steps detailed and actionable
         6. Test cases should be specific to the website's purpose and features
-        7. Include security and performance considerations
-        8. Consider user experience and accessibility
-        9. Make sure that test cases start with navigating to the website URL
-        10. If you need personal data for testing, use:
+        7. Consider user experience and accessibility
+        8. Make sure that test cases start with navigating to the website URL
+        9. If you need personal data for testing, use:
             - Name: Bayram Annakov
             - LinkedIn: https://www.linkedin.com/in/bayramannakov
         """
