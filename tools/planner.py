@@ -213,10 +213,16 @@ class TestPlanSpreadsheetGenerator:
         6. Test cases should be specific to the website's purpose and features
         7. Consider user experience and accessibility
         8. Make sure that test cases start with navigating to the website URL
-        9. If you need personal data for testing, use:
+        9. If you need personal data for testing, use one of the following persons:
+            Person 1:
             - Name: Bayram Annakov
             - LinkedIn: https://www.linkedin.com/in/bayramannakov
             - Email: bayram.annakov@gmail.com
+
+            Person 2:
+            - Name: Yersultan Sapar
+            - LinkedIn: https://www.linkedin.com/in/yersultan
+            - Email: yersultan@example.com
         """
         
         try:
