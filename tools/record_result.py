@@ -1,4 +1,7 @@
+import base64
+
 from typing import Literal
+from pathlib import Path
 
 from .base import BaseAnthropicTool, ToolResult
 from tools.test_case_manager import update_status, VALID_STATUSES
@@ -26,7 +29,10 @@ class RecordTestResultTool(BaseAnthropicTool):
 
     async def __call__(self, spreadsheet_id: str, test_id: str, status: str, **kwargs) -> ToolResult:
         print(f"Recording result - Test ID: {test_id}, Status: {status}")
-        update_status(spreadsheet_id, test_id, status)
+        screenshot = sorted(Path("/tmp/outputs").glob("screenshot_*.png"), key=lambda p: p.stat().st_mtime)[-1]
+        print(f"Screenshot path: {screenshot}")
+        screenshot_base64 = base64.b64encode(screenshot.read_bytes()).decode()
+        update_status(spreadsheet_id, test_id, status, screenshot_base64)
         return ToolResult(system="Result recorded successfully.")
 
     def to_params(self) -> dict:

@@ -42,9 +42,8 @@ def attach_base64_image(issue_key: str, base64_image: str, filename: str = "scre
         file_obj = io.BytesIO(image_data)
         
         # Attach to Jira issue
-        jira.add_attachment(
-            issue_id=issue_key,
-            filename=filename,
+        jira.add_attachment_object(
+            issue_key=issue_key,
             attachment=file_obj
         )
         print(f"Successfully attached image to {issue_key}")

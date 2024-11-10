@@ -18,7 +18,7 @@ STATUS_COLORS = {
 
 VALID_STATUSES = {'Not Started', 'In Progress', 'Blocked', 'Failed', 'Passed', 'Skipped'}
 
-def update_status(spreadsheet_id: str, test_case_id: str, status: str) -> str:
+def update_status(spreadsheet_id: str, test_case_id: str, status: str, screenshot: str | None = None) -> str:
     """
     Update the status of a single test case.
     
@@ -73,7 +73,7 @@ def update_status(spreadsheet_id: str, test_case_id: str, status: str) -> str:
         # Create Jira issue if failed
         if status == 'Failed':
             print("Creating Jira issue for failed test case...")
-            created_issues = create_jira_issues_for_failures(spreadsheet_id, [row_data])
+            created_issues = create_jira_issues_for_failures(spreadsheet_id, [row_data], {test_case_id: screenshot})
             if created_issues:
                 print(f"Created Jira issue: {created_issues[0]['jira_key']} - {created_issues[0]['summary']}")
         
