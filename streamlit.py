@@ -373,6 +373,8 @@ def _render_message(
     with st.chat_message(sender):
         if is_tool_result:
             message = cast(ToolResult, message)
+            if message.system:
+                st.markdown(message.system)
             if message.output:
                 if message.__class__.__name__ == "CLIResult":
                     st.code(message.output)

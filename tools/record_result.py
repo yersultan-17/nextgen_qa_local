@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .base import BaseAnthropicTool, ToolResult
 from tools.test_case_manager import update_status, VALID_STATUSES
+from tools.spreadsheet import get_url
 
 class RecordTestResultTool(BaseAnthropicTool):
     """
@@ -32,8 +33,9 @@ class RecordTestResultTool(BaseAnthropicTool):
         screenshot = sorted(Path("/tmp/outputs").glob("screenshot_*.png"), key=lambda p: p.stat().st_mtime)[-1]
         print(f"Screenshot path: {screenshot}")
         screenshot_base64 = base64.b64encode(screenshot.read_bytes()).decode()
+        url = get_url(spreadsheet_id)
         update_status(spreadsheet_id, test_id, status, screenshot_base64)
-        return ToolResult(system="Result recorded successfully.")
+        return ToolResult(system=f"Recorded test result for {test_id} with status {status}. See {url} for details.")
 
     def to_params(self) -> dict:
         return {
