@@ -24,8 +24,6 @@ from anthropic.types.beta import (
 
 from tools import BashTool, ComputerTool, EditTool, ToolCollection, ToolResult
 
-from tools.planner import get_plan_data
-
 BETA_FLAG = "computer-use-2024-10-22"
 
 
@@ -103,12 +101,16 @@ You are a QA Engineer. You are given a test plan and a set of test cases.
 When user messages you "Start testing", you will receive a series of test steps and expected results.
 Your job is to take necessary actions to go through the test steps and verify that the expected results are met.
 
-When you are done with the test, reply with "Test complete".
+For each test case, start by reading the test steps and expected results.
+Then, take the necessary actions to verify that the expected results are met. On each step, write down your actions and observations.
+
+When you are done with the test plan, reply with "Test plan complete".
 </USER_INTERACTION_GUIDELINES>
 """
 
 async def sampling_loop(
     *,
+    test_cases: list[dict[str, Any]],
     model: str,
     provider: APIProvider,
     system_prompt_suffix: str,
@@ -129,16 +131,25 @@ async def sampling_loop(
         EditTool(),
     )
 
-    test_plan_data, spreadsheet_id = get_plan_data()
-    cases = test_plan_data["test_cases"]
-    first_test = cases[0]
+    test_plan_str = ""
 
-    steps = first_test["steps"]
-    expected_results = first_test["expected_results"]
-    print("TEST PLAN DATA", test_plan_data)
-    print("SPREADSHEET ID", spreadsheet_id)
+    for i, test_case in enumerate(test_cases):
+        test_plan_str += f"""
+<TEST_CASE_{i + 1}>
+Test title: {test_case['title']}.
+Description: {test_case['description']}.
+Prerequisites: {test_case['prerequisites']}.
+Test steps: {test_case['steps']}.
+Expected results: {test_case['expected_results']}.
+</TEST_CASE_{i + 1}>
+        """
 
-    system_prompt_suffix = f"You are testing {first_test['title']}. The test steps are {steps}. The expected results are {expected_results}."
+    system_prompt_suffix = f"""
+<TEST_PLAN>
+{test_plan_str}
+</TEST_PLAN>
+    """
+
     print("SYSTEM PROMPT SUFFIX", system_prompt_suffix)
 
     system = (

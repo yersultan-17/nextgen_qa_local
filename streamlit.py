@@ -26,6 +26,7 @@ from loop import (
     APIProvider,
     sampling_loop,
 )
+from tools.planner import get_plan_data
 from tools import ToolResult
 from dotenv import load_dotenv
 
@@ -58,6 +59,8 @@ class Sender(StrEnum):
 
 
 def setup_state():
+    if "test_cases" not in st.session_state:
+        st.session_state.test_cases = []
     if "messages" not in st.session_state:
         st.session_state.messages = []
     if "api_key" not in st.session_state:
@@ -99,12 +102,27 @@ async def main():
 
     st.markdown(STREAMLIT_STYLE, unsafe_allow_html=True)
 
-    st.title("Claude Computer Use for Mac")
+    st.title("Phaedrus AI - quality assurance agent")
 
-    st.markdown("""This is from [Mac Computer Use](https://github.com/deedy/mac_computer_use), a fork of [Anthropic Computer Use](https://github.com/anthropics/anthropic-quickstarts/blob/main/computer-use-demo/README.md) to work natively on Mac.""")
+    st.markdown("""This is an agent for quality assurance testing of web applications. Built on top of [Mac Computer Use](https://github.com/deedy/mac_computer_use).""")
+
+    website_url = st.text_input("Enter Website URL:", "")
+    if st.button("Generate test plan"):
+        if website_url:
+            # Initiate testing process with the provided URL
+            test_plan_data, spreadsheet_id = get_plan_data(website_url=website_url)
+            st.session_state.test_cases = test_plan_data["test_cases"]
+            # st.session_state.messages.append({"role": BOT, "content": f"Starting tests for {website_url}."})
+            # You can add additional logic here to begin the testing process
+        else:
+            st.warning("Please enter a valid website URL.")
+
+    # if test plan is generated, show the test cases
+    if st.session_state.test_cases:
+        st.subheader("Generated Test Cases")
+        st.table(st.session_state.test_cases)
 
     with st.sidebar:
-
         def _reset_api_provider():
             if st.session_state.provider_radio != st.session_state.provider:
                 _reset_model()
@@ -214,6 +232,7 @@ async def main():
         with st.spinner("Running Agent..."):
             # run the agent sampling loop with the newest message
             st.session_state.messages = await sampling_loop(
+                test_cases=st.session_state.test_cases,
                 system_prompt_suffix=st.session_state.custom_system_prompt,
                 model=st.session_state.model,
                 provider=st.session_state.provider,
