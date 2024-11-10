@@ -186,6 +186,7 @@ Expected results: {test_case['expected_results']}.
         # we use raw_response to provide debug information to streamlit. Your
         # implementation may be able call the SDK directly with:
         # `response = client.messages.create(...)` instead.
+        print(f"Sending length of messages: {len(messages)}")
         raw_response = client.beta.messages.with_raw_response.create(
             max_tokens=max_tokens,
             messages=messages,
