@@ -599,163 +599,164 @@ class TestPlanSpreadsheetGenerator:
                 continue
                 
         return created_issues
-
-    def update_test_case_statuses(self, spreadsheet_id: str, updates: List[Dict[str, str]]):
+    
+    def update_test_case_status(self, spreadsheet_id: str, test_case_id: str, status: str):
         """
-        Update the status of multiple test cases and create Jira issues for failures.
+        Update the status of a single test case.
         
         Args:
             spreadsheet_id (str): The ID of the spreadsheet
-            updates (List[Dict[str, str]]): List of updates, each containing 'id' and 'status'
+            test_case_id (str): The ID of the test case to update
+            status (str): New status value
+            
+        Returns:
+            str: Update result message
         """
         try:
             # First verify access
             if not self.verify_spreadsheet_access(spreadsheet_id):
-                # Try to ensure editor access
                 self.ensure_editor_access(spreadsheet_id)
-                
-                # Verify access again
                 if not self.verify_spreadsheet_access(spreadsheet_id):
                     raise Exception("Unable to obtain necessary permissions for the spreadsheet")
 
-            # Get all test cases from the spreadsheet
+            # Validate status
+            valid_statuses = {'Not Started', 'In Progress', 'Blocked', 'Failed', 'Passed', 'Skipped'}
+            if status not in valid_statuses:
+                raise ValueError(f"Invalid status value: {status}. Valid statuses are: {valid_statuses}")
+
+            # Get test cases data
             result = self.sheets_service.spreadsheets().values().get(
                 spreadsheetId=spreadsheet_id,
-                range='Test Cases!A:J'  # Include Jira Issue column
+                range='Test Cases!A:J'
             ).execute()
             
             values = result.get('values', [])
             if not values:
                 raise ValueError("No test cases found in spreadsheet")
                 
-            # Find the column indices
+            # Find column indices
             headers = values[0]
-            try:
-                id_col = headers.index('ID')
-                status_col = headers.index('Status')
-            except ValueError:
-                raise ValueError("Required columns 'ID' or 'Status' not found in spreadsheet")
-                
-            # Create a batch update request
-            batch_updates = []
-            row_number = 1  # Start after header row
+            id_col = headers.index('ID')
+            status_col = headers.index('Status')
             
-            # Create a map of test case IDs to their new statuses
-            status_map = {update['id']: update['status'] for update in updates}
-            
-            # Valid status values for validation
-            valid_statuses = {'Not Started', 'In Progress', 'Blocked', 'Failed', 'Passed', 'Skipped'}
-            
-            # Validate statuses
-            invalid_statuses = set(status_map.values()) - valid_statuses
-            if invalid_statuses:
-                raise ValueError(f"Invalid status values found: {invalid_statuses}. "
-                            f"Valid statuses are: {valid_statuses}")
-            
-            # Find and update each test case
-            updated_ids = set()
-            failed_rows = []  # Track failed test cases
-
-            for row in values[1:]:  # Skip header row
-                row_number += 1
-                if not row:  # Skip empty rows
-                    continue
+            # Find the test case row
+            row_number = None
+            row_data = None
+            for idx, row in enumerate(values[1:], start=2):  # Start from 2 to account for header
+                if row[id_col] == test_case_id:
+                    row_number = idx
+                    row_data = row
+                    break
                     
-                test_case_id = row[id_col]
-                if test_case_id in status_map:
-                    new_status = status_map[test_case_id]
-                    batch_updates.append({
-                        'range': f'Test Cases!{chr(65 + status_col)}{row_number}',
-                        'values': [[new_status]]
-                    })
-                    updated_ids.add(test_case_id)
-                    
-                    # If status is Failed, add to failed_rows
-                    if new_status == 'Failed':
-                        failed_rows.append(row)
-            
-            # Check if any test case IDs weren't found
-            not_found_ids = set(status_map.keys()) - updated_ids
-            if not_found_ids:
-                raise ValueError(f"Test case IDs not found: {not_found_ids}")
+            if not row_number:
+                raise ValueError(f"Test case ID not found: {test_case_id}")
                 
-            if batch_updates:
-                body = {
-                    'valueInputOption': 'RAW',
-                    'data': batch_updates
+            # Update the status
+            update_range = f'Test Cases!{chr(65 + status_col)}{row_number}'
+            self.sheets_service.spreadsheets().values().update(
+                spreadsheetId=spreadsheet_id,
+                range=update_range,
+                valueInputOption='RAW',
+                body={'values': [[status]]}
+            ).execute()
+            
+            # Update color formatting
+            if not self.sheet_ids:
+                spreadsheet = self.sheets_service.spreadsheets().get(
+                    spreadsheetId=spreadsheet_id
+                ).execute()
+                self.sheet_ids = {
+                    sheet['properties']['title']: sheet['properties']['sheetId'] 
+                    for sheet in spreadsheet['sheets']
                 }
                 
-                # Execute the batch update
-                result = self.sheets_service.spreadsheets().values().batchUpdate(
-                    spreadsheetId=spreadsheet_id,
-                    body=body
-                ).execute()
-                
-                # Store sheet IDs for the spreadsheet if not already stored
-                if not self.sheet_ids:
-                    spreadsheet = self.sheets_service.spreadsheets().get(
-                        spreadsheetId=spreadsheet_id
-                    ).execute()
-                    self.sheet_ids = {
-                        sheet['properties']['title']: sheet['properties']['sheetId'] 
-                        for sheet in spreadsheet['sheets']
-                    }
-                
-                # Add color coding based on status
-                color_requests = []
-                for update in batch_updates:
-                    # Extract row number from range
-                    row = int(update['range'].split('!')[-1][1:])
-                    status = update['values'][0][0]
-                    
-                    # Define status colors
-                    status_colors = {
-                        'Passed': {'red': 0.7, 'green': 0.9, 'blue': 0.7},  # Light green
-                        'Failed': {'red': 0.9, 'green': 0.7, 'blue': 0.7},  # Light red
-                        'Blocked': {'red': 0.9, 'green': 0.85, 'blue': 0.7},  # Light orange
-                        'In Progress': {'red': 0.7, 'green': 0.7, 'blue': 0.9},  # Light blue
-                        'Skipped': {'red': 0.8, 'green': 0.8, 'blue': 0.8},  # Light gray
-                        'Not Started': {'red': 1, 'green': 1, 'blue': 1}  # White
-                    }
-                    
-                    color_requests.append({
-                        'repeatCell': {
-                            'range': {
-                                'sheetId': self.sheet_ids['Test Cases'],
-                                'startRowIndex': row - 1,
-                                'endRowIndex': row,
-                                'startColumnIndex': status_col,
-                                'endColumnIndex': status_col + 1
-                            },
-                            'cell': {
-                                'userEnteredFormat': {
-                                    'backgroundColor': status_colors.get(status, {'red': 1, 'green': 1, 'blue': 1})
-                                }
-                            },
-                            'fields': 'userEnteredFormat.backgroundColor'
+            status_colors = {
+                'Passed': {'red': 0.7, 'green': 0.9, 'blue': 0.7},
+                'Failed': {'red': 0.9, 'green': 0.7, 'blue': 0.7},
+                'Blocked': {'red': 0.9, 'green': 0.85, 'blue': 0.7},
+                'In Progress': {'red': 0.7, 'green': 0.7, 'blue': 0.9},
+                'Skipped': {'red': 0.8, 'green': 0.8, 'blue': 0.8},
+                'Not Started': {'red': 1, 'green': 1, 'blue': 1}
+            }
+            
+            color_request = {
+                'repeatCell': {
+                    'range': {
+                        'sheetId': self.sheet_ids['Test Cases'],
+                        'startRowIndex': row_number - 1,
+                        'endRowIndex': row_number,
+                        'startColumnIndex': status_col,
+                        'endColumnIndex': status_col + 1
+                    },
+                    'cell': {
+                        'userEnteredFormat': {
+                            'backgroundColor': status_colors.get(status, {'red': 1, 'green': 1, 'blue': 1})
                         }
-                    })
-                
-                if color_requests:
-                    self.sheets_service.spreadsheets().batchUpdate(
-                        spreadsheetId=spreadsheet_id,
-                        body={'requests': color_requests}
-                    ).execute()
-
-                # Create Jira issues for failed test cases
-                if failed_rows:
-                    print("Creating Jira issues for failed test cases...")
-                    created_issues = self.create_jira_issues_for_failures(spreadsheet_id, failed_rows)
-                    
-                    if created_issues:
-                        print(f"\nCreated {len(created_issues)} Jira issues:")
-                        for issue in created_issues:
-                            print(f"- {issue['test_case_id']}: {issue['jira_key']} - {issue['summary']}")
-                
-                return f"Updated {len(batch_updates)} test case(s)"
-                
+                    },
+                    'fields': 'userEnteredFormat.backgroundColor'
+                }
+            }
+            
+            self.sheets_service.spreadsheets().batchUpdate(
+                spreadsheetId=spreadsheet_id,
+                body={'requests': [color_request]}
+            ).execute()
+            
+            # Create Jira issue if status is Failed
+            if status == 'Failed':
+                print("Creating Jira issue for failed test case...")
+                created_issues = self.create_jira_issues_for_failures(spreadsheet_id, [row_data])
+                if created_issues:
+                    print(f"Created Jira issue: {created_issues[0]['jira_key']} - {created_issues[0]['summary']}")
+            
+            return f"Updated test case {test_case_id} status to {status}"
+            
         except HttpError as error:
-            raise Exception(f"Error updating test cases: {str(error)}")
+            raise Exception(f"Error updating test case: {str(error)}")
+
+    def update_test_case_statuses(self, spreadsheet_id: str, updates: List[Dict[str, str]]):
+        """
+        Update the status of multiple test cases in batch.
+        
+        Args:
+            spreadsheet_id (str): The ID of the spreadsheet
+            updates (List[Dict[str, str]]): List of updates, each containing 'id' and 'status'
+            
+        Returns:
+            str: Update result message
+        """
+        try:
+            results = []
+            failed_updates = []
+            
+            for update in updates:
+                try:
+                    result = self.update_test_case_status(
+                        spreadsheet_id=spreadsheet_id,
+                        test_case_id=update['id'],
+                        status=update['status']
+                    )
+                    results.append(result)
+                except Exception as e:
+                    failed_updates.append({
+                        'id': update['id'],
+                        'error': str(e)
+                    })
+            
+            # Prepare result message
+            success_count = len(results)
+            fail_count = len(failed_updates)
+            
+            message = f"Updated {success_count} test case(s)"
+            if fail_count > 0:
+                message += f"\nFailed to update {fail_count} test case(s):"
+                for fail in failed_updates:
+                    message += f"\n- {fail['id']}: {fail['error']}"
+                    
+            return message
+            
+        except Exception as e:
+            raise Exception(f"Error in batch update: {str(e)}")
 
     def get_spreadsheet_url(self, spreadsheet_id: str) -> str:
         """
@@ -838,6 +839,7 @@ def get_plan_data(website_url: str):
     else:
         print(f"Generating test plan for website: {website_url}")
         test_plan_data = generator.generate_test_plan(website_url)
+
 
     print("Creating spreadsheet for test plan...")
     spreadsheet_id = generator.create_spreadsheet_for_test_plan(test_plan_data, website_url)
