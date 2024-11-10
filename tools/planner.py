@@ -171,12 +171,7 @@ class TestPlanSpreadsheetGenerator:
         Consider all aspects of testing including but not limited to:
         - Core functionality testing specific to the website's purpose
         - User interface and experience testing
-        - Performance testing
-        - Security testing
         - Error handling
-        - Cross-browser compatibility
-        - Mobile responsiveness
-        - Integration testing where applicable
         - Edge cases and boundary testing
         
         Return the response in this exact JSON format:
@@ -189,9 +184,6 @@ class TestPlanSpreadsheetGenerator:
                 "test_environment": [
                     "Chrome Browser Version 120+",
                     "Firefox Browser Version 120+",
-                    "Safari Browser Version 17+",
-                    "Mobile Chrome on iOS 17+",
-                    "Mobile Chrome on Android 14+"
                 ]
             }},
             "test_cases": [
