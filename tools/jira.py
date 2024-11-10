@@ -12,7 +12,8 @@ import os
 jira = Jira(
     url='https://nextgen-qa.atlassian.net',
     username='bayram.annakov@gmail.com',
-    token=os.getenv('JIRA_TOKEN'))
+    password=os.getenv('JIRA_TOKEN'),
+    cloud=True)
 
 
 def create_issue(summary: str, description: str) -> Dict:
@@ -36,7 +37,8 @@ def create_issue(summary: str, description: str) -> Dict:
     }
 
     try:
-        response = jira.issue_create(fields=issue_fields)
+        response = jira.issue_create(fields=issue_fields['fields'])
+        print(response)
         return {
             'key': response['key'],
             'self': response['self'],
@@ -116,4 +118,5 @@ Test Environment:
             
     return created_issues
 
-create_issue("Test", "Test")
+#print(jira.get_issue("NQ-1"))
+#create_issue("Test", "Test")
