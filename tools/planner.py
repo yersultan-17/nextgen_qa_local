@@ -832,7 +832,7 @@ def get_plan_data(website_url: str):
 
     if website_url in MOCK_TEST_PLANS:
         print(f"Using mock data for website: {website_url}")
-        path_to_mock_data = MOCK_TEST_PLANS[website_url]
+        path_to_mock_data = "tools/mock_data/" + MOCK_TEST_PLANS[website_url]
         with open(path_to_mock_data, "r") as file:
             test_plan_data = json.load(file)
     else:

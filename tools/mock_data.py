@@ -1,3 +1,4 @@
 MOCK_TEST_PLANS = {
-    "https://app.onsa.ai": "tools/mock_data/onsa.json"
+    "https://app.onsa.ai": "onsa.json",
+    "https://google.com/maps": "maps.json",
 }
