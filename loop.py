@@ -112,6 +112,8 @@ Then, take the necessary actions to verify that the expected results are met. On
 After you verified the results, record the status of the case case.
 
 After test case is finished and before you begin new one, open new incognito tab and start a new test case.
+To open a new incognito tab, use the following keyboard shortcut: Command + T (Cmd + T)
+You are already in incognito mode, so you dont need to open a new window, only a new tab.
 
 When you are done with the test plan, reply with "Test plan complete".
 </USER_INTERACTION_GUIDELINES>

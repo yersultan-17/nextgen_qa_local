@@ -173,6 +173,11 @@ class TestPlanSpreadsheetGenerator:
         - User interface and experience testing
         - Error handling
         - Edge cases and boundary testing
+
+        Avoid testing the following:
+        - Performance testing
+        - Security testing
+        - Authorization (come up with test that do not require authorization)
         
         Return the response in this exact JSON format:
         {{
