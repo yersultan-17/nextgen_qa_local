@@ -41,35 +41,6 @@ class TestPlanSpreadsheetGenerator:
         # Initialize Firecrawl
         self.firecrawl = FirecrawlApp(api_key=firecrawl_api_key)
 
-
-
-
-class TestPlanSpreadsheetGenerator:
-    def __init__(self, google_creds_file: str, anthropic_api_key: str, firecrawl_api_key: str):
-        """
-        Initialize the generator with API credentials.
-        
-        Args:
-            google_creds_file (str): Path to Google service account JSON file
-            anthropic_api_key (str): Anthropic API key
-            firecrawl_api_key (str): Firecrawl API key
-        """
-        # Initialize existing services
-        self.client = anthropic.Anthropic(api_key=anthropic_api_key)
-        self.creds = service_account.Credentials.from_service_account_file(
-            google_creds_file,
-            scopes=[
-                'https://www.googleapis.com/auth/spreadsheets',
-                'https://www.googleapis.com/auth/drive'
-            ]
-        )
-        self.sheets_service = build('sheets', 'v4', credentials=self.creds)
-        self.drive_service = build('drive', 'v3', credentials=self.creds)
-        self.sheet_ids = {}
-        
-        # Initialize Firecrawl
-        self.firecrawl = FirecrawlApp(api_key=firecrawl_api_key)
-
     def analyze_website_and_generate_test_plan(self, website_url: str) -> Tuple[dict, str]:
         """
         Analyze website using Firecrawl and generate test plan.
