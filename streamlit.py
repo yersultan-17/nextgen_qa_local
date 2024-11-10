@@ -108,9 +108,8 @@ async def main():
 
     st.markdown("""This is an agent for quality assurance testing of web applications. Built on top of [Mac Computer Use](https://github.com/deedy/mac_computer_use).""")
 
-    website_url = st.text_input("Enter Website URL:", "")
+    url = st.text_input("Enter Website URL:", "")
     if st.button("Generate test plan"):
-        if website_url:
         if url:
             # Add https:// if not present and strip whitespace
             website_url = url.strip()
